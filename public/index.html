@@ -562,7 +562,7 @@ async function saveMember(memberId) {
 async function deleteMember(memberId) {
   if (!confirm('确认删除该会员？此操作不可恢复！')) return;
   try {
-    const res = await fetch(`${API}/api/members/${memberId}?operator=${currentUser.username}`, { method:'DELETE' });
+    const res = await fetch(`${API}/api/members/${memberId}?operator=${currentUser.username}&role=${currentUser.role}&username=${currentUser.username}`, { method:'DELETE' });
     const data = await res.json();
     if (data.success) {
       fetchAndRefreshMembers();
