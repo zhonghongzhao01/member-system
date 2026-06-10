@@ -404,14 +404,22 @@ app.get('/api/stats', (req, res) => {
   res.json({ success:true, data: { total_members, core_members, trial_members, total_points, total_spent } });
 });
 
+// ===== 销售权限辅助：获取销售人员的客户ID列表 =====
+function getSalesMemberIds(db, username, name) {
+  return (db.members || [])
+    .filter(m => m.owner === username || m.owner_name === name || m.owner === name)
+    .map(m => m.id);
+}
+
 // ===== 消费记录列表（前端用 /api/consumption-records）=====
 app.get('/api/consumption-records', (req, res) => {
   const db = readDB();
   let records = db.consumption_records || [];
   const { username, name, role } = req.query;
-  // 世界级销售权限：销售只能看自己操作的消费记录
+  // 销售按客户归属过滤（自己的客户所有记录都能看到，不管谁操作的）
   if (role !== 'admin' && username) {
-    records = records.filter(c => c.operator === username || c.operator === name);
+    const myMemberIds = getSalesMemberIds(db, username, name);
+    records = records.filter(c => myMemberIds.includes(c.member_id));
   }
   const result = records.map(r => ({
     consume_id: r.id, member_id: r.member_id, member_name: r.member_name,
@@ -427,10 +435,13 @@ app.get('/api/consumption/:member_id', (req, res) => {
   const db = readDB();
   let records = (db.consumption_records || [])
     .filter(r => r.member_id === req.params.member_id);
-  // 权限检查：销售只能查看自己操作的消费记录
+  // 权限检查：销售只能查看自己客户的消费记录
   const { username, name:uname, role } = req.query;
-  if (role !== 'admin' && username) {
-    records = records.filter(r => r.operator === username || r.operator === uname);
+  if (role !== 'admin' && username && records.length > 0) {
+    const myMemberIds = getSalesMemberIds(db, username, uname);
+    if (!myMemberIds.includes(req.params.member_id)) {
+      return res.json({ success:true, data: [] });
+    }
   }
   const result = records.map(r => ({
     consume_id: r.id, member_id: r.member_id, member_name: r.member_name,
@@ -491,9 +502,10 @@ app.get('/api/points-logs', (req, res) => {
   const db = readDB();
   let logs = db.points_log || [];
   const { username, name, role } = req.query;
-  // 世界级销售权限：销售只能看自己操作的积分流水
+  // 销售按客户归属过滤
   if (role !== 'admin' && username) {
-    logs = logs.filter(l => l.operator === username || l.operator === name);
+    const myMemberIds = getSalesMemberIds(db, username, name);
+    logs = logs.filter(l => myMemberIds.includes(l.member_id));
   }
   const result = logs.map(l => ({
     log_id: l.id, member_id: l.member_id, member_name: l.member_name,
@@ -509,10 +521,13 @@ app.get('/api/points-log/:member_id', (req, res) => {
   const db = readDB();
   let logs = (db.points_log || [])
     .filter(l => l.member_id === req.params.member_id);
-  // 权限检查：销售只能看自己操作的积分记录
+  // 权限检查：销售只能查看自己客户的积分流水
   const { username, name:uname, role } = req.query;
-  if (role !== 'admin' && username) {
-    logs = logs.filter(l => l.operator === username || l.operator === uname);
+  if (role !== 'admin' && username && logs.length > 0) {
+    const myMemberIds = getSalesMemberIds(db, username, uname);
+    if (!myMemberIds.includes(req.params.member_id)) {
+      return res.json({ success:true, data: [] });
+    }
   }
   const result = logs.map(l => ({
     log_id: l.id, member_id: l.member_id, member_name: l.member_name,
