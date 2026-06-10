@@ -148,6 +148,7 @@
       <div class="menu-item active" onclick="switchPage('dashboard',this)"><span class="icon">📊</span> 数据看板</div>
       <div class="menu-item" onclick="switchPage('members',this)"><span class="icon">👥</span> 会员管理</div>
       <div class="menu-item" id="menuMyMembers" style="display:none;" onclick="switchPage('my_members',this)"><span class="icon">🙋</span> 我的客户</div>
+      <div class="menu-item" id="menuSalesTeam" style="display:none;" onclick="switchPage('team',this)"><span class="icon">👔</span> 销售团队</div>
       <div class="menu-item" onclick="switchPage('consumption',this)"><span class="icon">🛒</span> 消费记录</div>
       <div class="menu-item" onclick="switchPage('points',this)"><span class="icon">💰</span> 积分流水</div>
       <div class="menu-item" onclick="switchPage('communications',this)"><span class="icon">💬</span> 沟通记录</div>
@@ -202,10 +203,12 @@ async function doLogin() {
         document.getElementById('menuMyMembers').style.display = 'flex';
         document.getElementById('menuAccount').style.display = 'none';
         document.getElementById('menuOpLogs').style.display = 'none';
+        document.getElementById('menuSalesTeam').style.display = 'none';
       } else {
         document.getElementById('menuMyMembers').style.display = 'none';
         document.getElementById('menuAccount').style.display = 'flex';
         document.getElementById('menuOpLogs').style.display = 'flex';
+        document.getElementById('menuSalesTeam').style.display = 'flex';
       }
       loadDashboard();
     } else {
@@ -286,6 +289,7 @@ function switchPage(page, el) {
   else if (page === 'catalog') loadCatalogPage();
   else if (page === 'communications') loadCommPage();
   else if (page === 'followup') loadFollowupPage();
+  else if (page === 'team') loadSalesTeamPage();
   else if (page === 'oplogs') loadOpLogsPage();
   else if (page === 'accounts') loadAccountsPage();
 }
@@ -831,6 +835,72 @@ async function loadFollowupPage() {
         ${sorted.length===0?'<div class="empty-tip">暂无会员数据</div>':''}
       </div>`;
   } catch(e) { mc.innerHTML = '<div class="loading" style="color:#f56c6c;">加载失败</div>'; }
+}
+
+// ===== 销售团队管理（管理员专属）=====
+async function loadSalesTeamPage() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = '<div class="loading">加载中...</div>';
+  try {
+    const res = await fetch(`${API}/api/sales-team`).then(r=>r.json());
+    const team = res.data || [];
+    const totalCustomers = team.reduce((s,t)=>s+t.total_customers,0);
+    const totalConverted = team.reduce((s,t)=>s+t.converted,0);
+    const totalConsumption = team.reduce((s,t)=>s+t.total_consumption,0);
+    const totalOverdue = team.reduce((s,t)=>s+t.overdue_followup,0);
+    mc.innerHTML = `
+      <div class="page-title">👔 销售团队管理</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="label">销售人数</div><div class="value">${team.length}</div></div>
+        <div class="stat-card"><div class="label">管理客户</div><div class="value">${totalCustomers}</div></div>
+        <div class="stat-card"><div class="label">已转化</div><div class="value" style="color:#67c23a;">${totalConverted}</div></div>
+        <div class="stat-card"><div class="label">总消费</div><div class="value" style="color:#e6a23c;">¥${totalConsumption.toLocaleString()}</div></div>
+        <div class="stat-card"><div class="label">⚠️ 过期未跟进</div><div class="value" style="color:#f56c6c;">${totalOverdue}</div></div>
+      </div>
+      ${team.map(t => `
+        <div class="table-box" style="margin-bottom:20px;">
+          <div class="table-header" style="cursor:pointer;" onclick="toggleSalesDetail('${t.username}')">
+            <h3>👤 ${t.name}（${t.username}）</h3>
+            <span style="font-size:13px;color:#999;">客户 ${t.total_customers} | 跟进中 ${t.following} | 已转化 ${t.converted} | 过期 ${t.overdue_followup} | 消费 ¥${t.total_consumption.toLocaleString()} | 积分 ${t.total_points.toLocaleString()} ▼</span>
+          </div>
+          <div id="sales-detail-${t.username}" style="display:none;">
+            <div class="mini-stats" style="display:flex;gap:15px;padding:12px 20px;background:#f5f7fa;border-bottom:1px solid #eee;flex-wrap:wrap;">
+              <span style="color:#409eff;">📋 新登记：${t.new_reg}</span>
+              <span style="color:#e6a23c;">💬 跟进中：${t.following}</span>
+              <span style="color:#909399;">🤔 有意向：${t.intent}</span>
+              <span style="color:#67c23a;">✅ 已转化：${t.converted}</span>
+              <span style="color:#f56c6c;">❌ 已流失：${t.lost}</span>
+              <span>⚠️ 过期未跟进：<strong style="color:#f56c6c;">${t.overdue_followup}</strong></span>
+            </div>
+            ${t.customers.length===0?'<div class="empty-tip">暂无客户</div>':
+            `<table><thead><tr><th>编号</th><th>姓名</th><th>类型</th><th>电话</th><th>状态</th><th>积分</th><th>消费</th><th>最后跟进</th><th>下次跟进</th></tr></thead><tbody>
+              ${t.customers.map(c => {
+                const fuColor = (c.next_followup||'')!=='' && c.next_followup<new Date().toISOString().slice(0,10) ? '#f56c6c' : '#e6a23c';
+                return `<tr>
+                  <td>${c.id}</td>
+                  <td><strong>${c.name}</strong></td>
+                  <td>${c.type}</td>
+                  <td>${c.phone}</td>
+                  <td><span class="tag tag-status-${c.status==='已转化'?'converted':c.status==='跟进中'?'following':c.status==='有意向'?'intent':c.status==='新登记'?'new':'lost'}">${c.status}</span></td>
+                  <td>${c.points.toLocaleString()}</td>
+                  <td>¥${c.total_spent.toLocaleString()}</td>
+                  <td style="font-size:13px;">${c.last_followup||'—'}</td>
+                  <td style="font-weight:600;color:${fuColor};">${c.next_followup||'—'}</td>
+                </tr>`;
+              }).join('')}
+            </tbody></table>`}
+          </div>
+        </div>
+      `).join('')}
+      ${team.length===0?'<div class="empty-tip">暂无销售人员</div>':''}
+    `;
+  } catch(e) { mc.innerHTML = '<div class="loading" style="color:#f56c6c;">加载失败</div>'; }
+}
+
+// ===== 展开/折叠销售详情 =====
+function toggleSalesDetail(username) {
+  const el = document.getElementById('sales-detail-' + username);
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
 // ===== 获取沟通记录（解耦版本）=====

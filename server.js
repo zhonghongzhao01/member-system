@@ -328,6 +328,48 @@ app.get('/api/dashboard', (req, res) => {
   });
 });
 
+// ===== 销售团队管理（管理员专属）=====
+app.get('/api/sales-team', (req, res) => {
+  const db = readDB();
+  const salesUsers = (db.users || []).filter(u => u.role === 'sales');
+  const members = db.members || [];
+  const consumptionRecords = db.consumption_records || [];
+  const result = salesUsers.map(u => {
+    const myMembers = members.filter(m => m.owner === u.username);
+    const myMemberIds = myMembers.map(m => m.id);
+    const myConsumptions = consumptionRecords.filter(c => myMemberIds.includes(c.member_id));
+    const following = myMembers.filter(m => m.status === '跟进中').length;
+    const converted = myMembers.filter(m => m.status === '已转化').length;
+    const intent = myMembers.filter(m => m.status === '有意向').length;
+    const newReg = myMembers.filter(m => m.status === '新登记').length;
+    const lost = myMembers.filter(m => m.status === '已流失' || m.status === '暂不考虑').length;
+    const totalConsumption = myConsumptions.reduce((s, c) => s + (c.cash_spent || 0), 0)
+      + myMembers.reduce((s, m) => s + (m.total_spent || 0), 0);
+    const totalPoints = myMembers.reduce((s, m) => s + (m.points || 0), 0);
+    const overdue = myMembers.filter(m => (m.next_followup || '') !== '' && m.next_followup < new Date().toISOString().slice(0, 10)).length;
+    return {
+      username: u.username,
+      name: u.name || u.username,
+      total_customers: myMembers.length,
+      following,
+      converted,
+      intent,
+      new_reg: newReg,
+      lost,
+      overdue_followup: overdue,
+      total_consumption: totalConsumption,
+      total_points: totalPoints,
+      customers: myMembers.map(m => ({
+        id: m.id, name: m.name, phone: m.phone, type: m.type,
+        status: m.status, points: m.points, total_spent: m.total_spent,
+        last_followup: m.last_followup || '', next_followup: m.next_followup || '',
+        product: m.product || '', source: m.source || '', join_date: m.join_date || ''
+      }))
+    };
+  });
+  res.json({ success: true, data: result });
+});
+
 // ===== 操作日志 =====
 app.get('/api/logs', (req, res) => {
   const db = readDB();
