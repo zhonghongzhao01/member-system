@@ -45,21 +45,25 @@
     {
       "id": "M001",
       "name": "张会员",
-      "phone": "13800000001",
+      "phone": "13900000001",
       "gender": "男",
       "age": 65,
       "type": "核心会员",
       "product": "4980元旅居礼包",
       "amount": 4980,
-      "points": 8000,
+      "points": 5000,
       "total_spent": 4980,
       "join_date": "2025-09-15",
       "source": "微信",
       "status": "已转化",
-      "owner": "percy",
-      "owner_name": "珀西",
+      "owner": "admin",
+      "owner_name": "管理员",
       "next_followup": "2026-06-17",
-      "note": "核心会员，已购买4980套餐"
+      "note": "核心会员，已购买4980套餐",
+      "level": "四星",
+      "_role": "admin",
+      "_username": "admin",
+      "_operator": "admin"
     },
     {
       "id": "M002",
@@ -348,6 +352,82 @@
       "owner_name": "小刘",
       "next_followup": "",
       "note": ""
+    },
+    {
+      "id": "M017",
+      "name": "自动化测试A",
+      "phone": "13811110000",
+      "gender": "",
+      "age": "",
+      "type": "散客",
+      "product": "",
+      "amount": 0,
+      "points": 800,
+      "total_spent": 0,
+      "join_date": "2026-06-10",
+      "source": "",
+      "status": "新登记",
+      "owner": "xiaoliu",
+      "owner_name": "小刘",
+      "next_followup": "",
+      "note": ""
+    },
+    {
+      "id": "M018",
+      "name": "测试B",
+      "phone": "13822220000",
+      "gender": "",
+      "age": "",
+      "type": "散客",
+      "product": "",
+      "amount": 0,
+      "points": 200,
+      "total_spent": 0,
+      "join_date": "2026-06-10",
+      "source": "",
+      "status": "新登记",
+      "owner": "xiaochen",
+      "owner_name": "小陈",
+      "next_followup": "",
+      "note": ""
+    },
+    {
+      "id": "M019",
+      "name": "重复测试",
+      "phone": "13800000001",
+      "gender": "",
+      "age": "",
+      "type": "散客",
+      "product": "",
+      "amount": 0,
+      "points": 100,
+      "total_spent": 0,
+      "join_date": "2026-06-10",
+      "source": "",
+      "status": "新登记",
+      "owner": "admin",
+      "owner_name": "管理员",
+      "next_followup": "",
+      "note": ""
+    },
+    {
+      "id": "M020",
+      "name": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "phone": "13899999999",
+      "gender": "",
+      "age": "",
+      "type": "散客",
+      "product": "",
+      "amount": 0,
+      "points": 100,
+      "total_spent": 0,
+      "join_date": "2026-06-10",
+      "source": "",
+      "status": "新登记",
+      "owner": "admin",
+      "owner_name": "管理员",
+      "next_followup": "",
+      "note": ""
     }
   ],
   "orders": [],
@@ -375,6 +455,78 @@
       "operator": "管理员",
       "log_date": "2026-06-10",
       "note": ""
+    },
+    {
+      "id": "PL003",
+      "member_id": "M017",
+      "member_name": "自动化测试A",
+      "change_type": "购买获得",
+      "points_change": 800,
+      "related_order_id": "",
+      "balance_after": 800,
+      "operator": "admin",
+      "log_date": "2026-06-10",
+      "note": "新增会员，初始积分"
+    },
+    {
+      "id": "PL004",
+      "member_id": "M018",
+      "member_name": "测试B",
+      "change_type": "购买获得",
+      "points_change": 200,
+      "related_order_id": "",
+      "balance_after": 200,
+      "operator": "admin",
+      "log_date": "2026-06-10",
+      "note": "新增会员，初始积分"
+    },
+    {
+      "id": "PL005",
+      "member_id": "M019",
+      "member_name": "重复测试",
+      "change_type": "购买获得",
+      "points_change": 100,
+      "related_order_id": "",
+      "balance_after": 100,
+      "operator": "admin",
+      "log_date": "2026-06-10",
+      "note": "新增会员，初始积分"
+    },
+    {
+      "id": "PL006",
+      "member_id": "M020",
+      "member_name": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "change_type": "购买获得",
+      "points_change": 100,
+      "related_order_id": "",
+      "balance_after": 100,
+      "operator": "admin",
+      "log_date": "2026-06-10",
+      "note": "新增会员，初始积分"
+    },
+    {
+      "id": "PL007",
+      "member_id": "M021",
+      "member_name": "�Ų����",
+      "change_type": "购买获得",
+      "points_change": 500,
+      "related_order_id": "",
+      "balance_after": 500,
+      "operator": "admin",
+      "log_date": "2026-06-10",
+      "note": "新增会员，初始积分"
+    },
+    {
+      "id": "PL008",
+      "member_id": "M022",
+      "member_name": "testcurl",
+      "change_type": "购买获得",
+      "points_change": 500,
+      "related_order_id": "",
+      "balance_after": 500,
+      "operator": "admin",
+      "log_date": "2026-06-10",
+      "note": "新增会员，初始积分"
     }
   ],
   "catalog": [
@@ -452,9 +604,32 @@
       "consume_date": "2026-06-10",
       "operator": "管理员",
       "note": ""
+    },
+    {
+      "id": "CR003",
+      "member_id": "M001",
+      "member_name": "张会员",
+      "item_id": "",
+      "item_name": "",
+      "consume_type": "",
+      "location": "",
+      "points_spent": 0,
+      "cash_spent": 0,
+      "consume_date": "2026-06-10",
+      "operator": "",
+      "note": ""
     }
   ],
-  "communications": [],
+  "communications": [
+    {
+      "id": "CM001",
+      "member_id": "M001",
+      "comm_date": "2026-06-10",
+      "content": "自动测试沟通",
+      "next_followup": "",
+      "operator": ""
+    }
+  ],
   "operation_logs": [],
   "logs": [
     {
@@ -632,6 +807,166 @@
       "target": "system",
       "detail": "用户登录",
       "time": "2026-06-10T05:24:05.960Z"
+    },
+    {
+      "id": "L023",
+      "username": "admin",
+      "action": "login",
+      "target": "system",
+      "detail": "用户登录",
+      "time": "2026-06-10T13:27:59.145Z"
+    },
+    {
+      "id": "L024",
+      "username": "xiaoliu",
+      "action": "login",
+      "target": "system",
+      "detail": "用户登录",
+      "time": "2026-06-10T13:27:59.177Z"
+    },
+    {
+      "id": "L025",
+      "username": "xiaochen",
+      "action": "login",
+      "target": "system",
+      "detail": "用户登录",
+      "time": "2026-06-10T13:27:59.208Z"
+    },
+    {
+      "id": "L026",
+      "username": "percy",
+      "action": "login",
+      "target": "system",
+      "detail": "用户登录",
+      "time": "2026-06-10T13:27:59.223Z"
+    },
+    {
+      "id": "L027",
+      "username": "admin",
+      "action": "login",
+      "target": "system",
+      "detail": "用户登录",
+      "time": "2026-06-10T13:29:39.214Z"
+    },
+    {
+      "id": "L028",
+      "username": "xiaoliu",
+      "action": "login",
+      "target": "system",
+      "detail": "用户登录",
+      "time": "2026-06-10T13:29:39.223Z"
+    },
+    {
+      "id": "L029",
+      "username": "xiaochen",
+      "action": "login",
+      "target": "system",
+      "detail": "用户登录",
+      "time": "2026-06-10T13:29:39.233Z"
+    },
+    {
+      "id": "L030",
+      "username": "percy",
+      "action": "login",
+      "target": "system",
+      "detail": "用户登录",
+      "time": "2026-06-10T13:29:39.262Z"
+    },
+    {
+      "id": "L031",
+      "username": "admin",
+      "action": "add_member",
+      "target": "M017",
+      "detail": "新增会员：自动化测试A",
+      "time": "2026-06-10T13:29:39.405Z"
+    },
+    {
+      "id": "L032",
+      "username": "admin",
+      "action": "edit_member",
+      "target": "M001",
+      "detail": "修改会员：张会员",
+      "time": "2026-06-10T13:29:39.422Z"
+    },
+    {
+      "id": "L033",
+      "username": "admin",
+      "action": "add_member",
+      "target": "M018",
+      "detail": "新增会员：测试B",
+      "time": "2026-06-10T13:29:39.451Z"
+    },
+    {
+      "id": "L034",
+      "username": "",
+      "action": "consume",
+      "target": "CR003",
+      "detail": "消费记录：张会员 ",
+      "time": "2026-06-10T13:29:39.488Z"
+    },
+    {
+      "id": "L035",
+      "username": "",
+      "action": "comm",
+      "target": "CM001",
+      "detail": "沟通记录：张会员",
+      "time": "2026-06-10T13:29:39.530Z"
+    },
+    {
+      "id": "L036",
+      "username": "admin",
+      "action": "edit_user",
+      "target": "user",
+      "detail": "修改用户：管理员",
+      "time": "2026-06-10T13:29:39.594Z"
+    },
+    {
+      "id": "L037",
+      "username": "admin",
+      "action": "add_member",
+      "target": "M019",
+      "detail": "新增会员：重复测试",
+      "time": "2026-06-10T13:29:39.716Z"
+    },
+    {
+      "id": "L038",
+      "username": "admin",
+      "action": "add_member",
+      "target": "M020",
+      "detail": "新增会员：AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "time": "2026-06-10T13:29:39.747Z"
+    },
+    {
+      "id": "L039",
+      "username": "admin",
+      "action": "add_member",
+      "target": "M021",
+      "detail": "新增会员：�Ų����",
+      "time": "2026-06-10T13:29:51.040Z"
+    },
+    {
+      "id": "L040",
+      "username": "admin",
+      "action": "add_member",
+      "target": "M022",
+      "detail": "新增会员：testcurl",
+      "time": "2026-06-10T13:30:10.210Z"
+    },
+    {
+      "id": "L041",
+      "username": "admin",
+      "action": "delete_member",
+      "target": "M022",
+      "detail": "删除会员：testcurl",
+      "time": "2026-06-10T13:30:31.933Z"
+    },
+    {
+      "id": "L042",
+      "username": "admin",
+      "action": "delete_member",
+      "target": "M021",
+      "detail": "删除会员：�Ų����",
+      "time": "2026-06-10T13:31:34.198Z"
     }
   ]
 }

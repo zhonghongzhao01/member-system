@@ -151,6 +151,7 @@
       <div class="menu-item" onclick="switchPage('consumption',this)"><span class="icon">🛒</span> 消费记录</div>
       <div class="menu-item" onclick="switchPage('points',this)"><span class="icon">💰</span> 积分流水</div>
       <div class="menu-item" onclick="switchPage('communications',this)"><span class="icon">💬</span> 沟通记录</div>
+      <div class="menu-item" onclick="switchPage('followup',this)"><span class="icon">📅</span> 跟进管理</div>
       <div class="menu-divider"></div>
       <div class="menu-item" id="menuCatalog" onclick="switchPage('catalog',this)"><span class="icon">📋</span> 服务目录</div>
       <div class="menu-item" id="menuOpLogs" onclick="switchPage('oplogs',this)"><span class="icon">📝</span> 操作日志</div>
@@ -284,6 +285,7 @@ function switchPage(page, el) {
   else if (page === 'points') loadPointsPage();
   else if (page === 'catalog') loadCatalogPage();
   else if (page === 'communications') loadCommPage();
+  else if (page === 'followup') loadFollowupPage();
   else if (page === 'oplogs') loadOpLogsPage();
   else if (page === 'accounts') loadAccountsPage();
 }
@@ -322,8 +324,8 @@ async function loadDashboard() {
         <div class="stat-card"><div class="label">${currentUser.role==='sales'?'我的客户数':'会员总数'}</div><div class="value">${s.total_members||0}</div><div class="sub">近7天新增 ${last7} 人</div></div>
         <div class="stat-card"><div class="label">核心会员</div><div class="value" style="color:#e6a23c;">${s.core_members||0}</div></div>
         <div class="stat-card"><div class="label">试用会员</div><div class="value" style="color:#67c23a;">${s.trial_members||0}</div></div>
-        <div class="stat-card"><div class="label">流通总积分</div><div class="value" style="color:#f56c6c;">${((s.total_points||0)/10000).toFixed(1)}万</div></div>
-        <div class="stat-card"><div class="label">累计消费</div><div class="value" style="color:#909399;">¥${((s.total_spent||0)/10000).toFixed(1)}万</div></div>
+        <div class="stat-card"><div class="label">流通总积分</div><div class="value" style="color:#f56c6c;">${(s.total_points||0).toLocaleString()}</div></div>
+        <div class="stat-card"><div class="label">累计消费</div><div class="value" style="color:#909399;">¥${(s.total_spent||0).toLocaleString()}</div></div>
       </div>
       <div class="table-box">
         <div class="table-header"><h3>🆕 最近新增会员</h3></div>
@@ -390,7 +392,7 @@ function renderMembersPage(isMyView) {
         ${canEdit ? '<button class="btn btn-primary" onclick="openMemberModal()">+ 新增会员</button>' : ''}
       </div>
       <table>
-        <thead><tr><th>编号</th><th>姓名</th><th>类型</th><th>电话</th><th>产品</th><th>积分</th><th>状态</th><th>负责人</th>${canEdit?'<th>操作</th>':''}</tr></thead>
+        <thead><tr><th>编号</th><th>姓名</th><th>类型</th><th>电话</th><th>产品</th><th>积分</th><th>状态</th><th>最后跟进</th><th>下次跟进</th><th>负责人</th>${canEdit?'<th>操作</th>':''}</tr></thead>
         <tbody id="memberTableBody"></tbody>
       </table>
       <div id="memberEmptyTip" class="empty-tip" style="display:none;">暂无会员数据</div>
@@ -423,6 +425,8 @@ function renderMemberRows() {
       <td>${m.product||'—'}</td>
       <td><span class="points-tag">${m.points||0}</span></td>
       <td><span class="tag tag-status-${m.status==='已转化'?'converted':m.status==='跟进中'?'following':m.status==='意向'?'intent':m.status==='新登记'?'new':'lost'}">${m.status}</span></td>
+      <td style="font-size:13px;color:#666;">${m.last_followup||'—'}</td>
+      <td style="font-size:13px;${(m.next_followup||'')<new Date().toISOString().slice(0,10) && (m.next_followup||'')!==''?'color:#f56c6c;font-weight:600;':'color:#e6a23c;'}">${m.next_followup||'—'}${(m.next_followup||'')<new Date().toISOString().slice(0,10) && (m.next_followup||'')!==''?' ⚠️':''}</td>
       <td>${showOwner(m)}</td>
       ${canEdit?`<td><button class="btn btn-sm" style="background:#f0f5ff;color:#667eea;border:none;" onclick="openMemberModal('${m.id}')">编辑</button>
       <button class="btn btn-sm btn-danger" onclick="deleteMember('${m.id}')">删除</button></td>`:''}
@@ -617,7 +621,7 @@ async function viewMember(memberId) {
           </div>
           <div class="detail-section">
             <h4>沟通记录（${commList.length}条）</h4>
-            ${commList.length===0?'<div class="empty-tip">暂无沟通记录</div>':'<table><thead><tr><th>日期</th><th>方式</th><th>内容</th><th>下次跟进</th></tr></thead><tbody>' + commList.map(c=>`<tr><td>${c.comm_date}</td><td>${c.comm_type}</td><td>${c.content||'—'}</td><td>${c.next_followup||'—'}</td></tr>`).join('') + '</tbody></table>'}
+            ${commList.length===0?'<div class="empty-tip">暂无沟通记录</div>':'<table><thead><tr><th>日期</th><th>方式</th><th>内容</th><th>下次跟进</th><th>照片</th></tr></thead><tbody>' + commList.map(c=>`<tr><td>${c.comm_date}</td><td>${c.comm_type}</td><td>${c.content||'—'}</td><td>${c.next_followup||'—'}</td><td>${(c.photos||[]).length>0?(c.photos.map(p=>`<img src="${p}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;margin:2px;" onclick="this.style.width=(this.style.width==='200px'?'40px':'200px');this.style.height=(this.style.height==='200px'?'40px':'200px');" title="点击放大" />`).join('')):'—'}</td></tr>`).join('') + '</tbody></table>'}
           </div>
         </div>
         <div class="modal-footer"><button class="btn" style="background:#f0f0f0;color:#666;" onclick="this.closest('.modal-mask').remove()">关闭</button></div>
@@ -631,8 +635,9 @@ async function loadConsumptionPage() {
   const mc = document.getElementById('mainContent');
   mc.innerHTML = '<div class="loading">加载中...</div>';
   try {
+    const params = currentUser.role==='sales' ? `?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=sales` : '';
     const [consumeRes, membersRes] = await Promise.all([
-      fetch(`${API}/api/consumption-records`).then(r=>r.json()),
+      fetch(`${API}/api/consumption-records${params}`).then(r=>r.json()),
       fetch(`${API}/api/members?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=${currentUser.role}`).then(r=>r.json())
     ]);
     allConsume = consumeRes.data || [];
@@ -721,8 +726,9 @@ async function loadPointsPage() {
   const mc = document.getElementById('mainContent');
   mc.innerHTML = '<div class="loading">加载中...</div>';
   try {
+    const params = currentUser.role==='sales' ? `?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=sales` : '';
     const [logsRes, membersRes] = await Promise.all([
-      fetch(`${API}/api/points-logs`).then(r=>r.json()),
+      fetch(`${API}/api/points-logs${params}`).then(r=>r.json()),
       fetch(`${API}/api/members?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=${currentUser.role}`).then(r=>r.json())
     ]);
     allPointsLog = logsRes.data || [];
@@ -758,7 +764,76 @@ async function loadCatalogPage() {
   } catch(e) { mc.innerHTML = '<div class="loading" style="color:#f56c6c;">加载失败</div>'; }
 }
 
-// ===== 沟通记录页 =====
+// ===== 跟进管理页 =====
+async function loadFollowupPage() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = '<div class="loading">加载中...</div>';
+  try {
+    const params = `?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=${currentUser.role}`;
+    const membersRes = await fetch(`${API}/api/members${params}`).then(r=>r.json());
+    const members = membersRes.data || [];
+    
+    // 获取每个会员的沟通记录
+    for (const m of members) {
+      const res = await fetch(`${API}/api/communications/${m.id}`);
+      const data = await res.json();
+      const mcomms = data.data || [];
+      m._total_comms = mcomms.length;
+      if (mcomms.length > 0) {
+        const last = mcomms.sort((a,b)=>(b.comm_date||'').localeCompare(a.comm_date||''))[0];
+        m._last_comm_date = last.comm_date || '';
+        m._last_comm_type = last.comm_type || '';
+        m._last_comm_content = (last.content||'').substring(0,50);
+      } else {
+        m._last_comm_date = '';
+        m._last_comm_type = '';
+        m._last_comm_content = '';
+      }
+    }
+    
+    // 排序：过期未跟进 > 需要跟进 > 无需跟进
+    const today = new Date().toISOString().slice(0,10);
+    const overdue = members.filter(m => (m.next_followup||'') !== '' && m.next_followup < today);
+    const needFU = members.filter(m => (m.next_followup||'') !== '' && m.next_followup >= today);
+    const noFU = members.filter(m => (m.next_followup||'') === '');
+    const sorted = [...overdue, ...needFU, ...noFU];
+    
+    const isAdmin = currentUser.role === 'admin';
+    mc.innerHTML = `
+      <div class="page-title">📅 跟进管理${isAdmin?'（全局监督）':'（我的客户）'}</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="label">⚠️ 过期未跟进</div><div class="value" style="color:#f56c6c;">${overdue.length}</div></div>
+        <div class="stat-card"><div class="label">📋 待跟进</div><div class="value" style="color:#e6a23c;">${needFU.length}</div></div>
+        <div class="stat-card"><div class="label">✅ 已覆盖</div><div class="value" style="color:#67c23a;">${noFU.length}</div></div>
+        <div class="stat-card"><div class="label">📞 沟通总次数</div><div class="value">${sorted.reduce((s,m)=>s+m._total_comms,0)}</div></div>
+      </div>
+      <div class="table-box">
+        <div class="table-header"><h3>会员跟进状态（${sorted.length}人）</h3><button class="btn btn-primary" onclick="openCommModal()">+ 新增跟进记录</button></div>
+        <table><thead><tr><th>会员</th><th>负责人</th><th>最后跟进</th><th>最近沟通</th><th>下次跟进</th><th>状态</th><th>操作</th></tr></thead><tbody>
+          ${sorted.map(m => {
+            const isOverdue = (m.next_followup||'') !== '' && m.next_followup < today;
+            const fuStatus = isOverdue ? '⚠️ 已过期' : ((m.next_followup||'') !== '' ? '📋 待跟进' : '✅ 正常');
+            const fuColor = isOverdue ? '#f56c6c' : ((m.next_followup||'') !== '' ? '#e6a23c' : '#67c23a');
+            return `<tr style="${isOverdue?'background:#fff1f0;':''}">
+              <td><strong>${m.name}</strong>（${m.id}）</td>
+              <td>${showOwner(m)}</td>
+              <td style="font-size:13px;">${m._last_comm_date||m.last_followup||'—'}<br><span style="color:#999;font-size:11px;">${m._last_comm_type || ''}</span></td>
+              <td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${m._last_comm_content||''}">${m._last_comm_content||'暂无沟通'}</td>
+              <td style="font-weight:600;color:${fuColor};">${m.next_followup||'—'}</td>
+              <td><span style="color:${fuColor};font-weight:600;">${fuStatus}</span></td>
+              <td>
+                <button class="btn btn-sm" style="background:#f0f5ff;color:#667eea;border:none;" onclick="openCommModal('${m.id}')">跟进</button>
+                <button class="btn btn-sm btn-text" onclick="viewMember('${m.id}')">详情</button>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody></table>
+        ${sorted.length===0?'<div class="empty-tip">暂无会员数据</div>':''}
+      </div>`;
+  } catch(e) { mc.innerHTML = '<div class="loading" style="color:#f56c6c;">加载失败</div>'; }
+}
+
+// ===== 获取沟通记录（解耦版本）=====
 async function loadCommPage() {
   const mc = document.getElementById('mainContent');
   mc.innerHTML = '<div class="loading">加载中...</div>';
@@ -776,30 +851,42 @@ async function loadCommPage() {
       <div class="page-title">💬 沟通记录</div>
       <div class="table-box">
         <div class="table-header"><h3>所有沟通记录（${allComm.length}条）</h3><button class="btn btn-primary" onclick="openCommModal()">+ 新增沟通记录</button></div>
-        <table><thead><tr><th>会员</th><th>沟通方式</th><th>沟通内容</th><th>沟通日期</th><th>下次跟进</th><th>操作人</th></tr></thead><tbody>
-          ${allComm.map(c => `<tr><td>${c.member_name}</td><td>${c.comm_type}</td><td>${c.content||'—'}</td><td>${c.comm_date}</td><td>${c.next_followup||'—'}</td><td>${c.operator||'—'}</td></tr>`).join('')}
+        <table><thead><tr><th>会员</th><th>沟通方式</th><th>沟通内容</th><th>沟通日期</th><th>下次跟进</th><th>照片</th><th>操作人</th></tr></thead><tbody>
+          ${allComm.map(c => `<tr><td>${c.member_name}</td><td>${c.comm_type}</td><td>${c.content||'—'}</td><td>${c.comm_date}</td><td>${c.next_followup||'—'}</td><td>${(c.photos||[]).length>0?(c.photos.map(p=>`<img src="${p}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;margin:1px;cursor:pointer;" onclick="this.style.width=(this.style.width==='200px'?'36px':'200px');this.style.height=(this.style.height==='200px'?'36px':'200px');" title="点击放大" />`).join('')):'—'}</td><td>${c.operator||'—'}</td></tr>`).join('')}
         </tbody></table>
         ${allComm.length===0?'<div class="empty-tip">暂无沟通记录</div>':''}
       </div>`;
   } catch(e) { mc.innerHTML = '<div class="loading" style="color:#f56c6c;">加载失败</div>'; }
 }
 
-async function openCommModal() {
+async function openCommModal(memberId) {
   const membersRes = await fetch(`${API}/api/members?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=${currentUser.role}`).then(r=>r.json());
   const members = membersRes.data || [];
   const mask = document.createElement('div');
   mask.className = 'modal-mask';
   mask.innerHTML = `
-    <div class="modal-box">
-      <div class="modal-header"><h3>新增沟通记录</h3><button class="modal-close" onclick="this.closest('.modal-mask').remove()">×</button></div>
+    <div class="modal-box" style="width:720px;">
+      <div class="modal-header"><h3>新增跟进记录</h3><button class="modal-close" onclick="this.closest('.modal-mask').remove()">×</button></div>
       <div class="modal-body">
-        <div class="form-group" style="margin-bottom:16px;"><label>会员 *</label><select id="cm-member"><option value="">请选择会员</option>${members.map(m=>`<option value="${m.id}">${m.name}（${m.id}）</option>`).join('')}</select></div>
+        <div class="form-group" style="margin-bottom:16px;"><label>会员 *</label><select id="cm-member"><option value="">请选择会员</option>${members.map(m=>`<option value="${m.id}" ${memberId===m.id?'selected':''}>${m.name}（${m.id}）</option>`).join('')}</select></div>
         <div class="form-row">
-          <div class="form-group"><label>沟通方式</label><select id="cm-type"><option>电话</option><option>微信</option><option>面谈</option><option>短信</option></select></div>
+          <div class="form-group"><label>沟通方式</label><select id="cm-type"><option>电话</option><option>微信</option><option>面谈</option><option>上门拜访</option><option>短信</option></select></div>
           <div class="form-group"><label>沟通日期</label><input id="cm-date" type="date" value="${new Date().toISOString().split('T')[0]}" /></div>
         </div>
-        <div class="form-group" style="margin-bottom:16px;"><label>沟通内容</label><textarea id="cm-content" placeholder="记录本次沟通内容..."></textarea></div>
-        <div class="form-group"><label>下次跟进日期</label><input id="cm-next" type="date" /></div>
+        <div class="form-row">
+          <div class="form-group"><label>跟进状态</label><select id="cm-fustatus"><option>新登记</option><option>跟进中</option><option>有意向</option><option>已转化</option><option>暂不考虑</option><option>已流失</option></select></div>
+          <div class="form-group"><label>下次跟进日期</label><input id="cm-next" type="date" /></div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;"><label>沟通内容</label><textarea id="cm-content" placeholder="记录本次沟通内容..." style="min-height:80px;"></textarea></div>
+        <div class="form-group">
+          <label>📸 拍照记录（可选，最多3张）</label>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-sm" style="background:#67c23a;color:#fff;" onclick="capturePhoto()">📷 拍照</button>
+            <input type="file" id="cm-photo-input" accept="image/*" capture="environment" multiple style="display:none;" onchange="onPhotoSelected(event)" />
+            <span style="font-size:12px;color:#999;">用手机/电脑摄像头拍摄现场照片</span>
+          </div>
+          <div id="cm-photos-preview" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"></div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn" style="background:#f0f0f0;color:#666;" onclick="this.closest('.modal-mask').remove()">取消</button>
@@ -812,21 +899,87 @@ async function openCommModal() {
 async function saveComm() {
   const member_id = document.getElementById('cm-member').value;
   if (!member_id) { alert('请选择会员'); return; }
+  // 收集已选择的照片
   const data = {
     member_id,
     comm_type: document.getElementById('cm-type').value,
     comm_date: document.getElementById('cm-date').value,
     content: document.getElementById('cm-content').value,
     next_followup: document.getElementById('cm-next').value,
-    operator: currentUser.name||'系统'
+    followup_status: document.getElementById('cm-fustatus').value,
+    operator: currentUser.name||'系统',
+    photos: window._commPhotos || []
   };
   try {
     const res = await fetch(`${API}/api/communications`, {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
     });
     const result = await res.json();
-    if (result.success) { document.querySelector('.modal-mask')?.remove(); loadCommPage(); }
+    if (result.success) { 
+      window._commPhotos = [];
+      document.querySelector('.modal-mask')?.remove(); 
+      loadCommPage();
+      // 如果当前在跟进管理页，也刷新
+      if (document.querySelector('.sidebar .menu-item.active')?.textContent?.includes('跟进管理')) {
+        loadFollowupPage();
+      }
+    }
+    else alert('提交失败：'+(result.message||''));
   } catch(e) { alert('提交失败'); }
+}
+
+// ===== 拍照功能 =====
+window._commPhotos = [];
+
+function capturePhoto() {
+  document.getElementById('cm-photo-input').click();
+}
+
+async function onPhotoSelected(event) {
+  const files = event.target.files;
+  if (!files || files.length === 0) return;
+  
+  const container = document.getElementById('cm-photos-preview');
+  for (const file of files) {
+    if (window._commPhotos.length >= 3) { alert('最多上传3张照片'); break; }
+    
+    // 压缩并转base64
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      // 画到 canvas 压缩到 800px 宽
+      const img = new Image();
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const maxW = 800;
+        const scale = Math.min(1, maxW / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        window._commPhotos.push(dataUrl);
+        
+        // 显示缩略图
+        const thumb = document.createElement('div');
+        thumb.style.cssText = 'position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid #eee;';
+        thumb.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;" />`;
+        const del = document.createElement('button');
+        del.textContent = '×';
+        del.style.cssText = 'position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:18px;';
+        del.onclick = function() {
+          const idx = window._commPhotos.indexOf(dataUrl);
+          if (idx > -1) window._commPhotos.splice(idx, 1);
+          thumb.remove();
+        };
+        thumb.appendChild(del);
+        container.appendChild(thumb);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  // 清空input以便重复选择
+  event.target.value = '';
 }
 
 // ===== 操作日志页（管理员）=====

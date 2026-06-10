@@ -365,27 +365,38 @@ app.get('/api/stats', (req, res) => {
 // ===== 消费记录列表（前端用 /api/consumption-records）=====
 app.get('/api/consumption-records', (req, res) => {
   const db = readDB();
-  const records = (db.consumption_records || []).map(r => ({
+  let records = db.consumption_records || [];
+  const { username, name, role } = req.query;
+  // 世界级销售权限：销售只能看自己操作的消费记录
+  if (role !== 'admin' && username) {
+    records = records.filter(c => c.operator === username || c.operator === name);
+  }
+  const result = records.map(r => ({
     consume_id: r.id, member_id: r.member_id, member_name: r.member_name,
     consume_type: r.consume_type, location: r.location,
     points_spent: r.points_spent, cash_spent: r.cash_spent,
     consume_date: r.consume_date, operator: r.operator, note: r.note
   }));
-  res.json({ success:true, data: records });
+  res.json({ success:true, data: result });
 });
 
 // ===== 单个会员的消费记录 =====
 app.get('/api/consumption/:member_id', (req, res) => {
   const db = readDB();
-  const records = (db.consumption_records || [])
-    .filter(r => r.member_id === req.params.member_id)
-    .map(r => ({
-      consume_id: r.id, member_id: r.member_id, member_name: r.member_name,
-      consume_type: r.consume_type, location: r.location,
-      points_spent: r.points_spent, cash_spent: r.cash_spent,
-      consume_date: r.consume_date, operator: r.operator, note: r.note
-    }));
-  res.json({ success:true, data: records });
+  let records = (db.consumption_records || [])
+    .filter(r => r.member_id === req.params.member_id);
+  // 权限检查：销售只能查看自己操作的消费记录
+  const { username, name:uname, role } = req.query;
+  if (role !== 'admin' && username) {
+    records = records.filter(r => r.operator === username || r.operator === uname);
+  }
+  const result = records.map(r => ({
+    consume_id: r.id, member_id: r.member_id, member_name: r.member_name,
+    consume_type: r.consume_type, location: r.location,
+    points_spent: r.points_spent, cash_spent: r.cash_spent,
+    consume_date: r.consume_date, operator: r.operator, note: r.note
+  }));
+  res.json({ success:true, data: result });
 });
 
 // ===== 消费记录新增（前端用 /api/consume）=====
@@ -436,27 +447,38 @@ app.post('/api/consume', (req, res) => {
 // ===== 积分流水列表（前端用 /api/points-logs）=====
 app.get('/api/points-logs', (req, res) => {
   const db = readDB();
-  const logs = (db.points_log || []).map(l => ({
+  let logs = db.points_log || [];
+  const { username, name, role } = req.query;
+  // 世界级销售权限：销售只能看自己操作的积分流水
+  if (role !== 'admin' && username) {
+    logs = logs.filter(l => l.operator === username || l.operator === name);
+  }
+  const result = logs.map(l => ({
     log_id: l.id, member_id: l.member_id, member_name: l.member_name,
     change_type: l.change_type, points_change: l.points_change,
     balance_after: l.balance_after, log_date: l.log_date,
     operator: l.operator, note: l.note
   }));
-  res.json({ success:true, data: logs });
+  res.json({ success:true, data: result });
 });
 
 // ===== 单个会员的积分流水 =====
 app.get('/api/points-log/:member_id', (req, res) => {
   const db = readDB();
-  const logs = (db.points_log || [])
-    .filter(l => l.member_id === req.params.member_id)
-    .map(l => ({
-      log_id: l.id, member_id: l.member_id, member_name: l.member_name,
-      change_type: l.change_type, points_change: l.points_change,
-      balance_after: l.balance_after, log_date: l.log_date,
-      operator: l.operator, note: l.note
-    }));
-  res.json({ success:true, data: logs });
+  let logs = (db.points_log || [])
+    .filter(l => l.member_id === req.params.member_id);
+  // 权限检查：销售只能看自己操作的积分记录
+  const { username, name:uname, role } = req.query;
+  if (role !== 'admin' && username) {
+    logs = logs.filter(l => l.operator === username || l.operator === uname);
+  }
+  const result = logs.map(l => ({
+    log_id: l.id, member_id: l.member_id, member_name: l.member_name,
+    change_type: l.change_type, points_change: l.points_change,
+    balance_after: l.balance_after, log_date: l.log_date,
+    operator: l.operator, note: l.note
+  }));
+  res.json({ success:true, data: result });
 });
 
 // ===== 沟通记录 =====
@@ -478,12 +500,19 @@ app.post('/api/communications', (req, res) => {
     comm_date: d.comm_date || new Date().toISOString().slice(0,10),
     content: d.content || '',
     next_followup: d.next_followup || '',
-    operator: d.operator || ''
+    operator: d.operator || '',
+    photos: d.photos || []  // 拍照上传：base64图片数组
   };
   db.communications.push(comm);
-  // 更新会员的下次跟进日期
+  // 更新会员的下次跟进日期和状态
   const member = (db.members||[]).find(m => m.id === d.member_id);
-  if (member && d.next_followup) member.next_followup = d.next_followup;
+  if (member) {
+    if (d.next_followup) member.next_followup = d.next_followup;
+    // 更新跟进状态
+    if (d.followup_status) member.followup_status = d.followup_status;
+    // 记录最后跟进时间
+    member.last_followup = d.comm_date || new Date().toISOString().slice(0,10);
+  }
   addLog(db, d.operator||'', 'comm', comm.id, '沟通记录：'+(member?member.name:''));
   writeDB(db);
   res.json({ success:true, data: comm });
