@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行馆旅居 · 会员管理系统</title>
+<style>
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif; background: #f0f2f5; color: #333; }
+  
+  .login-page { min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); }
+  .login-box { background:#fff; border-radius:16px; padding:40px; width:380px; box-shadow:0 20px 60px rgba(0,0,0,0.15); }
+  .login-box h1 { text-align:center; color:#667eea; margin-bottom:8px; font-size:24px; }
+  .login-box .subtitle { text-align:center; color:#999; margin-bottom:30px; font-size:14px; }
+  .login-box input { width:100%; padding:12px 16px; margin-bottom:16px; border:1px solid #ddd; border-radius:8px; font-size:15px; }
+  .login-box input:focus { outline:none; border-color:#667eea; }
+  .login-box button { width:100%; padding:13px; background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border:none; border-radius:8px; font-size:16px; cursor:pointer; }
+  .login-box button:hover { opacity:0.9; }
+  .login-err { color:#f56c6c; text-align:center; margin-top:12px; font-size:14px; min-height:20px; }
+  .login-hint { color:#bbb; text-align:center; margin-top:16px; font-size:12px; }
+
+  .app-header { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; padding:0 24px; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(0,0,0,0.15); }
+  .app-header h1 { font-size:20px; font-weight:600; }
+  .app-header .user-info { display:flex; align-items:center; gap:12px; font-size:14px; }
+  .app-header .header-btn { background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); color:#fff; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:13px; }
+  .app-header .header-btn:hover { background:rgba(255,255,255,0.3); }
+
+  .main-layout { display:flex; min-height:calc(100vh - 60px); }
+  
+  .sidebar { width:200px; background:#fff; border-right:1px solid #e8e8e8; padding:12px 0; flex-shrink:0; }
+  .sidebar .menu-item { padding:12px 20px; cursor:pointer; font-size:14px; color:#555; display:flex; align-items:center; gap:10px; transition:all 0.2s; }
+  .sidebar .menu-item:hover { background:#f5f0ff; color:#667eea; }
+  .sidebar .menu-item.active { background:#f5f0ff; color:#667eea; border-right:3px solid #667eea; font-weight:600; }
+  .sidebar .menu-item .icon { font-size:18px; width:24px; text-align:center; }
+  .sidebar .menu-divider { height:1px; background:#f0f0f0; margin:8px 16px; }
+
+  .content { flex:1; padding:24px; overflow-y:auto; }
+  .page-title { font-size:22px; font-weight:600; margin-bottom:20px; color:#333; }
+
+  .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+  .stat-card { background:#fff; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+  .stat-card .label { color:#999; font-size:13px; margin-bottom:8px; }
+  .stat-card .value { font-size:28px; font-weight:700; color:#667eea; }
+  .stat-card .sub { color:#bbb; font-size:12px; margin-top:4px; }
+
+  .table-box { background:#fff; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+  .table-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+  .table-header h3 { font-size:16px; font-weight:600; }
+  .table-box input[type="text"], .table-box input[type="search"] { padding:8px 14px; border:1px solid #ddd; border-radius:8px; font-size:14px; width:240px; }
+  .table-box input:focus { outline:none; border-color:#667eea; }
+  .btn { padding:8px 18px; border:none; border-radius:8px; cursor:pointer; font-size:14px; transition:all 0.2s; }
+  .btn-primary { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; }
+  .btn-primary:hover { opacity:0.9; }
+  .btn-success { background:#67c23a; color:#fff; }
+  .btn-warning { background:#e6a23c; color:#fff; }
+  .btn-danger { background:#f56c6c; color:#fff; }
+  .btn-sm { padding:5px 12px; font-size:12px; }
+  .btn-text { background:none; border:none; color:#667eea; cursor:pointer; font-size:13px; padding:4px 8px; }
+  .btn-text:hover { text-decoration:underline; }
+
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th { background:#fafafa; padding:10px 12px; text-align:left; color:#666; font-weight:600; border-bottom:2px solid #eee; }
+  td { padding:10px 12px; border-bottom:1px solid #f0f0f0; }
+  tr:hover { background:#f9f9ff; }
+  .tag { display:inline-block; padding:2px 10px; border-radius:20px; font-size:12px; font-weight:500; }
+  .tag-core { background:#f0f5ff; color:#667eea; }
+  .tag-trial { background:#fff7e6; color:#e6a23c; }
+  .tag-guest { background:#f0f9eb; color:#67c23a; }
+  .tag-tourist { background:#f4f4f5; color:#909399; }
+  .tag-enterprise { background:#fdf2ff; color:#b37feb; }
+  .tag-status-new { background:#e6f7ff; color:#1890ff; }
+  .tag-status-following { background:#fff7e6; color:#fa8c16; }
+  .tag-status-intent { background:#f0f5ff; color:#667eea; }
+  .tag-status-converted { background:#f6ffed; color:#52c41a; }
+  .tag-status-lost { background:#fff1f0; color:#f5222d; }
+  .tag-active { background:#f6ffed; color:#52c41a; }
+  .tag-inactive { background:#fff1f0; color:#f5222d; }
+
+  .points-tag { background:linear-gradient(135deg,#ffecd2,#fcb69f); color:#c23616; padding:2px 10px; border-radius:20px; font-size:13px; font-weight:600; }
+  .phone-mask { color:#999; font-style:italic; }
+
+  .modal-mask { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000; display:flex; align-items:center; justify-content:center; }
+  .modal-box { background:#fff; border-radius:16px; width:680px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+  .modal-header { padding:20px 24px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; }
+  .modal-header h3 { font-size:18px; }
+  .modal-close { font-size:22px; cursor:pointer; color:#999; background:none; border:none; padding:0 4px; }
+  .modal-close:hover { color:#333; }
+  .modal-body { padding:24px; }
+  .modal-footer { padding:16px 24px; border-top:1px solid #eee; display:flex; justify-content:flex-end; gap:10px; }
+  
+  .form-row { display:flex; gap:16px; margin-bottom:16px; flex-wrap:wrap; }
+  .form-group { flex:1; min-width:180px; }
+  .form-group label { display:block; font-size:13px; color:#666; margin-bottom:6px; }
+  .form-group input, .form-group select, .form-group textarea { width:100%; padding:9px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; font-family:inherit; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline:none; border-color:#667eea; }
+  .form-group textarea { resize:vertical; min-height:60px; }
+
+  .detail-section { margin-bottom:24px; }
+  .detail-section h4 { font-size:15px; font-weight:600; margin-bottom:12px; color:#667eea; border-left:3px solid #667eea; padding-left:10px; }
+  .detail-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .detail-item { background:#f9f9ff; padding:10px 14px; border-radius:8px; }
+  .detail-item .dl { color:#999; font-size:12px; }
+  .detail-item .dv { font-size:15px; font-weight:500; margin-top:2px; }
+
+  .loading { text-align:center; padding:40px; color:#999; }
+  .empty-tip { text-align:center; padding:40px; color:#ccc; font-size:14px; }
+  
+  .pagination { display:flex; justify-content:center; gap:6px; margin-top:16px; }
+  .pagination button { padding:6px 12px; border:1px solid #ddd; background:#fff; border-radius:6px; cursor:pointer; font-size:13px; }
+  .pagination button.active { background:#667eea; color:#fff; border-color:#667eea; }
+  
+  .tabs { display:flex; gap:0; margin-bottom:16px; border-bottom:2px solid #eee; }
+  .tab { padding:10px 20px; cursor:pointer; font-size:14px; color:#999; border-bottom:2px solid transparent; margin-bottom:-2px; }
+  .tab.active { color:#667eea; border-bottom-color:#667eea; font-weight:600; }
+  
+  .log-table { font-size:13px; }
+  .log-table .time { color:#999; font-size:12px; }
+  .log-table .action { color:#667eea; font-weight:500; }
+</style>
+</head>
+<body>
+
+<!-- 登录页 -->
+<div class="login-page" id="loginPage">
+  <div class="login-box">
+    <h1>🏨 行馆旅居</h1>
+    <p class="subtitle">会员管理系统</p>
+    <input type="text" id="loginUser" placeholder="用户名（admin / percy / xiaoliu / xiaochen）" />
+    <input type="password" id="loginPass" placeholder="密码：xg2026" />
+    <button onclick="doLogin()">登 录</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-hint">默认密码：xg2026 ｜ 登录后请及时修改密码</div>
+  </div>
+</div>
+
+<!-- 主界面 -->
+<div id="appPage" style="display:none;">
+  <div class="app-header">
+    <h1>🏨 行馆旅居 · 会员管理系统</h1>
+    <div class="user-info">
+      <span id="currentUser">管理员</span>
+      <button class="header-btn" onclick="openChangePwdModal()">修改密码</button>
+      <button class="header-btn" onclick="doLogout()">退出登录</button>
+    </div>
+  </div>
+  <div class="main-layout">
+    <div class="sidebar" id="sidebar">
+      <div class="menu-item active" onclick="switchPage('dashboard',this)"><span class="icon">📊</span> 数据看板</div>
+      <div class="menu-item" onclick="switchPage('members',this)"><span class="icon">👥</span> 会员管理</div>
+      <div class="menu-item" id="menuMyMembers" style="display:none;" onclick="switchPage('my_members',this)"><span class="icon">🙋</span> 我的客户</div>
+      <div class="menu-item" onclick="switchPage('consumption',this)"><span class="icon">🛒</span> 消费记录</div>
+      <div class="menu-item" onclick="switchPage('points',this)"><span class="icon">💰</span> 积分流水</div>
+      <div class="menu-item" onclick="switchPage('communications',this)"><span class="icon">💬</span> 沟通记录</div>
+      <div class="menu-divider"></div>
+      <div class="menu-item" id="menuCatalog" onclick="switchPage('catalog',this)"><span class="icon">📋</span> 服务目录</div>
+      <div class="menu-item" id="menuOpLogs" onclick="switchPage('oplogs',this)"><span class="icon">📝</span> 操作日志</div>
+      <div class="menu-item" id="menuAccount" onclick="switchPage('accounts',this)" style="display:none;"><span class="icon">👤</span> 账号管理</div>
+    </div>
+    <div class="content" id="mainContent">
+    </div>
+  </div>
+</div>
+
+<script>
+let API = '';
+let currentUser = null;
+let allMembers = [];
+let allConsume = [];
+let allPointsLog = [];
+let allCatalog = [];
+let allComm = [];
+let allUsers = [];
+let _memberSearchKeyword = '';
+let _memberSearchIsMyView = false;
+
+function getAPI() {
+  return 'http://' + window.location.hostname + ':3456';
+}
+
+// ===== 登录 =====
+async function doLogin() {
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginErr');
+  if (!username || !password) { errEl.textContent = '请输入用户名和密码'; return; }
+  try {
+    const res = await fetch(`${API}/api/login`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username, password})
+    });
+    const data = await res.json();
+    if (data.success) {
+      currentUser = data.user;
+      currentUser.username = username;
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('appPage').style.display = 'block';
+      document.getElementById('currentUser').textContent = currentUser.name + '（' + (currentUser.role==='admin'?'管理员':'销售') + '）';
+      API = getAPI();
+      // 根据角色显示/隐藏菜单
+      if (currentUser.role === 'sales') {
+        document.getElementById('menuMyMembers').style.display = 'flex';
+        document.getElementById('menuAccount').style.display = 'none';
+        document.getElementById('menuOpLogs').style.display = 'none';
+      } else {
+        document.getElementById('menuMyMembers').style.display = 'none';
+        document.getElementById('menuAccount').style.display = 'flex';
+        document.getElementById('menuOpLogs').style.display = 'flex';
+      }
+      loadDashboard();
+    } else {
+      errEl.textContent = data.message || '登录失败';
+    }
+  } catch(e) {
+    errEl.textContent = '无法连接服务器，请确认后端已启动';
+  }
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('appPage').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('loginPage').style.display !== 'none') doLogin();
+});
+
+// ===== 修改密码 =====
+function openChangePwdModal() {
+  const mask = document.createElement('div');
+  mask.className = 'modal-mask';
+  mask.innerHTML = `
+    <div class="modal-box" style="width:420px;">
+      <div class="modal-header"><h3>修改密码</h3><button class="modal-close" onclick="this.closest('.modal-mask').remove()">×</button></div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:16px;"><label>原密码</label><input type="password" id="oldPwd" placeholder="请输入原密码" /></div>
+        <div class="form-group" style="margin-bottom:16px;"><label>新密码</label><input type="password" id="newPwd" placeholder="至少4位" /></div>
+        <div class="form-group" style="margin-bottom:16px;"><label>确认新密码</label><input type="password" id="newPwd2" placeholder="再次输入新密码" /></div>
+        <div id="pwdMsg" style="color:#f56c6c;font-size:13px;min-height:20px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" style="background:#f0f0f0;color:#666;" onclick="this.closest('.modal-mask').remove()">取消</button>
+        <button class="btn btn-primary" onclick="doChangePwd()">确认修改</button>
+      </div>
+    </div>`;
+  document.body.appendChild(mask);
+}
+
+async function doChangePwd() {
+  const oldP = document.getElementById('oldPwd').value;
+  const newP = document.getElementById('newPwd').value;
+  const newP2 = document.getElementById('newPwd2').value;
+  const msg = document.getElementById('pwdMsg');
+  if (!oldP || !newP || !newP2) { msg.textContent = '请填写完整'; return; }
+  if (newP !== newP2) { msg.textContent = '两次新密码不一致'; return; }
+  if (newP.length < 4) { msg.textContent = '新密码至少4位'; return; }
+  try {
+    const res = await fetch(`${API}/api/change-password`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username:currentUser.username, oldPassword:oldP, newPassword:newP})
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('密码修改成功，请重新登录');
+      document.querySelector('.modal-mask')?.remove();
+      doLogout();
+    } else {
+      msg.textContent = data.message || '修改失败';
+    }
+  } catch(e) { msg.textContent = '网络错误'; }
+}
+
+// ===== 页面切换 =====
+function switchPage(page, el) {
+  document.querySelectorAll('.sidebar .menu-item').forEach(i => i.classList.remove('active'));
+  if (el) el.classList.add('active');
+  _memberSearchKeyword = '';
+  if (page === 'dashboard') loadDashboard();
+  else if (page === 'members') loadMembersPage();
+  else if (page === 'my_members') loadMyMembersPage();
+  else if (page === 'consumption') loadConsumptionPage();
+  else if (page === 'points') loadPointsPage();
+  else if (page === 'catalog') loadCatalogPage();
+  else if (page === 'communications') loadCommPage();
+  else if (page === 'oplogs') loadOpLogsPage();
+  else if (page === 'accounts') loadAccountsPage();
+}
+
+// ===== 手机号脱敏 =====
+function phoneMask(phone) {
+  if (!phone || phone.length < 7) return phone || '—';
+  return phone.substring(0,3) + '****' + phone.substring(phone.length-4);
+}
+
+// ===== 会员 owner 显示（优先显示中文名）=====
+function showOwner(m) {
+  return (m.owner_name || m.owner || '—');
+}
+
+// ===== 数据看板 =====
+async function loadDashboard() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = '<div class="loading">加载中...</div>';
+  try {
+    const params = currentUser.role==='sales' ? `?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=sales` : '';
+    const [statsRes, membersRes] = await Promise.all([
+      fetch(`${API}/api/stats${params}`).then(r=>r.json()),
+      fetch(`${API}/api/members${params}`).then(r=>r.json())
+    ]);
+    allMembers = membersRes.data || [];
+    const s = statsRes.data || {};
+    const last7 = allMembers.filter(m => {
+      if (!m.join_date) return false;
+      const d = new Date(m.join_date); const s7 = new Date(); s7.setDate(s7.getDate()-7);
+      return d >= s7;
+    }).length;
+    mc.innerHTML = `
+      <div class="page-title">📊 数据看板${currentUser.role==='sales'?'（我的客户）':''}</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="label">${currentUser.role==='sales'?'我的客户数':'会员总数'}</div><div class="value">${s.total_members||0}</div><div class="sub">近7天新增 ${last7} 人</div></div>
+        <div class="stat-card"><div class="label">核心会员</div><div class="value" style="color:#e6a23c;">${s.core_members||0}</div></div>
+        <div class="stat-card"><div class="label">试用会员</div><div class="value" style="color:#67c23a;">${s.trial_members||0}</div></div>
+        <div class="stat-card"><div class="label">流通总积分</div><div class="value" style="color:#f56c6c;">${((s.total_points||0)/10000).toFixed(1)}万</div></div>
+        <div class="stat-card"><div class="label">累计消费</div><div class="value" style="color:#909399;">¥${((s.total_spent||0)/10000).toFixed(1)}万</div></div>
+      </div>
+      <div class="table-box">
+        <div class="table-header"><h3>🆕 最近新增会员</h3></div>
+        <table><thead><tr><th>编号</th><th>姓名</th><th>类型</th><th>电话</th><th>积分</th><th>状态</th><th>负责人</th></tr></thead><tbody>
+          ${allMembers.slice(-5).reverse().map(m => `
+            <tr>
+              <td>${m.id}</td>
+              <td><a onclick="viewMember('${m.id}')" style="color:#667eea;cursor:pointer;">${m.name}</a></td>
+              <td><span class="tag tag-${m.type==='核心会员'?'core':m.type==='试用会员'?'trial':m.type==='散客'?'guest':m.type==='游客'?'tourist':'enterprise'}">${m.type}</span></td>
+              <td>${currentUser.role==='sales'&& m.owner !== currentUser.username ? phoneMask(m.phone) : (m.phone||'—')}</td>
+              <td><span class="points-tag">${m.points||0}</span></td>
+              <td><span class="tag tag-status-${m.status==='已转化'?'converted':m.status==='跟进中'?'following':m.status==='意向'?'intent':m.status==='新登记'?'new':'lost'}">${m.status}</span></td>
+              <td>${showOwner(m)}</td>
+            </tr>`).join('')}
+        </tbody></table>
+      </div>`;
+  } catch(e) {
+    mc.innerHTML = '<div class="loading" style="color:#f56c6c;">加载失败，请检查后端服务是否启动</div>';
+  }
+}
+
+// ===== 会员管理（全部，admin）=====
+async function loadMembersPage() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = '<div class="loading">加载中...</div>';
+  try {
+    const params = `?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=${currentUser.role}`;
+    const res = await fetch(`${API}/api/members${params}`);
+    const data = await res.json();
+    allMembers = data.data || [];
+    if (currentUser.role !== 'admin') {
+      allMembers = allMembers.filter(m => 
+        m.owner === currentUser.username || 
+        m.owner_name === currentUser.name || 
+        m.owner === currentUser.name
+      );
+    }
+    renderMembersPage(false);
+  } catch(e) { mc.innerHTML = '<div class="loading" style="color:#f56c6c;">加载失败</div>'; }
+}
+
+// ===== 我的客户（销售只看自己）=====
+async function loadMyMembersPage() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = '<div class="loading">加载中...</div>';
+  try {
+    const params = `?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=sales`;
+    const res = await fetch(`${API}/api/members${params}`);
+    const data = await res.json();
+    allMembers = data.data || [];
+    renderMembersPage(true);
+  } catch(e) { mc.innerHTML = '<div class="loading" style="color:#f56c6c;">加载失败</div>'; }
+}
+
+function renderMembersPage(isMyView) {
+  _memberSearchIsMyView = isMyView;
+  const mc = document.getElementById('mainContent');
+  const canEdit = currentUser.role === 'admin' || isMyView;
+  mc.innerHTML = `
+    <div class="page-title">${isMyView ? '🙋 我的客户' : '👥 会员管理'}</div>
+    <div class="table-box">
+      <div class="table-header">
+        <input type="text" id="memberSearchInput" placeholder="搜索姓名/电话/编号..." oninput="onMemberSearch()" value="${_memberSearchKeyword.replace(/'/g,"&#39;").replace(/"/g,'&quot;')}" autocomplete="off" />
+        ${canEdit ? '<button class="btn btn-primary" onclick="openMemberModal()">+ 新增会员</button>' : ''}
+      </div>
+      <table>
+        <thead><tr><th>编号</th><th>姓名</th><th>类型</th><th>电话</th><th>产品</th><th>积分</th><th>状态</th><th>负责人</th>${canEdit?'<th>操作</th>':''}</tr></thead>
+        <tbody id="memberTableBody"></tbody>
+      </table>
+      <div id="memberEmptyTip" class="empty-tip" style="display:none;">暂无会员数据</div>
+    </div>`;
+  renderMemberRows();
+  setTimeout(() => { const inp = document.getElementById('memberSearchInput'); if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); } }, 50);
+}
+
+function onMemberSearch() {
+  _memberSearchKeyword = document.getElementById('memberSearchInput')?.value || '';
+  renderMemberRows();
+}
+
+function renderMemberRows() {
+  const tbody = document.getElementById('memberTableBody');
+  const emptyTip = document.getElementById('memberEmptyTip');
+  if (!tbody) return;
+  let list = allMembers;
+  const kw = _memberSearchKeyword.toLowerCase();
+  if (kw) {
+    list = list.filter(m => (m.name||'').toLowerCase().includes(kw) || (m.phone||'').includes(kw) || (m.id||'').toLowerCase().includes(kw));
+  }
+  const canEdit = currentUser.role === 'admin' || _memberSearchIsMyView;
+  tbody.innerHTML = list.map(m => `
+    <tr>
+      <td>${m.id}</td>
+      <td><a onclick="viewMember('${m.id}')" style="color:#667eea;cursor:pointer;">${m.name}</a></td>
+      <td><span class="tag tag-${m.type==='核心会员'?'core':m.type==='试用会员'?'trial':m.type==='散客'?'guest':m.type==='游客'?'tourist':'enterprise'}">${m.type}</span></td>
+      <td>${_memberSearchIsMyView && m.owner !== currentUser.username ? phoneMask(m.phone) : (m.phone||'—')}</td>
+      <td>${m.product||'—'}</td>
+      <td><span class="points-tag">${m.points||0}</span></td>
+      <td><span class="tag tag-status-${m.status==='已转化'?'converted':m.status==='跟进中'?'following':m.status==='意向'?'intent':m.status==='新登记'?'new':'lost'}">${m.status}</span></td>
+      <td>${showOwner(m)}</td>
+      ${canEdit?`<td><button class="btn btn-sm" style="background:#f0f5ff;color:#667eea;border:none;" onclick="openMemberModal('${m.id}')">编辑</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteMember('${m.id}')">删除</button></td>`:''}
+    </tr>`).join('');
+  if (emptyTip) emptyTip.style.display = list.length === 0 ? 'block' : 'none';
+}
+
+// ===== 刷新会员列表（保留当前页面框架）=====
+async function fetchAndRefreshMembers() {
+  try {
+    const isMyView = _memberSearchIsMyView;
+    const roleParam = isMyView ? 'sales' : currentUser.role;
+    const params = `?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=${roleParam}`;
+    const res = await fetch(`${API}/api/members${params}`);
+    const data = await res.json();
+    allMembers = data.data || [];
+    if (currentUser.role !== 'admin' && !isMyView) {
+      allMembers = allMembers.filter(m => m.owner === currentUser.username || m.owner_name === currentUser.name);
+    }
+    renderMemberRows();
+  } catch(e) { console.error('刷新会员列表失败', e); }
+}
+
+// ===== 新增/编辑会员 =====
+async function openMemberModal(memberId) {
+  let m = { name:'', phone:'', gender:'男', age:'', type:'散客', product:'', amount:0, points:0, join_date:new Date().toISOString().split('T')[0], source:'微信', status:'新登记', owner:currentUser.username||'', owner_name:currentUser.name||'', next_followup:'', note:'' };
+  let isEdit = false;
+  if (memberId) {
+    const res = await fetch(`${API}/api/members/${memberId}?username=${currentUser.username}`);
+    const data = await res.json();
+    if (data.success) { m = data.data; isEdit = true; }
+    else { alert('无权限查看该会员'); return; }
+  }
+  // 获取用户列表（管理员可以分配负责人）
+  let users = [];
+  if (currentUser.role === 'admin') {
+    const uRes = await fetch(`${API}/api/users`);
+    const uData = await uRes.json();
+    users = uData.data || [];
+  }
+  const mask = document.createElement('div');
+  mask.className = 'modal-mask';
+  const isAdmin = currentUser.role === 'admin';
+  let ownerOptions = '';
+  if (isAdmin && users.length) {
+    ownerOptions = users.map(u => `<option value="${u.username}" ${((m.owner||currentUser.username)==u.username)?'selected':''}>${u.name}（${u.username}）</option>`).join('');
+  }
+  mask.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-header"><h3>${isEdit?'编辑会员':'新增会员'}</h3><button class="modal-close" onclick="this.closest('.modal-mask').remove()">×</button></div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group"><label>姓名 *</label><input id="fm-name" value="${m.name||''}" placeholder="会员姓名" /></div>
+          <div class="form-group"><label>电话 *</label><input id="fm-phone" value="${m.phone||''}" placeholder="手机号" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>性别</label><select id="fm-gender"><option ${m.gender!=='女'?'selected':''}>男</option><option ${m.gender==='女'?'selected':''}>女</option></select></div>
+          <div class="form-group"><label>年龄</label><input id="fm-age" type="number" value="${m.age||''}" placeholder="年龄" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>会员类型</label><select id="fm-type"><option ${m.type!=='试用会员'&&m.type!=='散客'&&m.type!=='游客'&&m.type!=='企业客户'?'selected':''}>核心会员</option><option ${m.type==='试用会员'?'selected':''}>试用会员</option><option ${m.type==='散客'?'selected':''}>散客</option><option ${m.type==='游客'?'selected':''}>游客</option><option ${m.type==='企业客户'?'selected':''}>企业客户</option></select></div>
+          <div class="form-group"><label>状态</label><select id="fm-status"><option ${m.status==='新登记'?'selected':''}>新登记</option><option ${m.status==='跟进中'?'selected':''}>跟进中</option><option ${m.status==='意向'?'selected':''}>意向</option><option ${m.status==='已转化'?'selected':''}>已转化</option><option ${m.status==='已流失'?'selected':''}>已流失</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>购买产品</label><input id="fm-product" value="${m.product||''}" placeholder="如：4980元旅居礼包" /></div>
+          <div class="form-group"><label>消费金额</label><input id="fm-amount" type="number" value="${m.amount||0}" placeholder="金额" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>当前积分</label><input id="fm-points" type="number" value="${m.points||0}" /></div>
+          <div class="form-group"><label>入会日期</label><input id="fm-join" type="date" value="${m.join_date||''}" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>来源</label><select id="fm-source"><option ${m.source!=='抖音'&&m.source!=='微视'&&m.source!=='老客推荐'&&m.source!=='自然到访'&&m.source!=='企业合作'?'selected':''}>微信</option><option ${m.source==='抖音'?'selected':''}>抖音</option><option ${m.source==='微视'?'selected':''}>微视</option><option ${m.source==='老客推荐'?'selected':''}>老客推荐</option><option ${m.source==='自然到访'?'selected':''}>自然到访</option><option ${m.source==='企业合作'?'selected':''}>企业合作</option></select></div>
+          <div class="form-group"><label>负责人</label>${isEdit && !isAdmin ? `<input value="${showOwner(m)}" disabled style="background:#f5f5f5;" />` : (isAdmin ? `<select id="fm-owner">${ownerOptions}</select>` : `<input value="${currentUser.name}" disabled style="background:#f5f5f5;" />`)}</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>下次跟进日期</label><input id="fm-next" type="date" value="${m.next_followup||''}" /></div>
+        </div>
+        <div class="form-group"><label>备注</label><textarea id="fm-note">${m.note||''}</textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" style="background:#f0f0f0;color:#666;" onclick="this.closest('.modal-mask').remove()">取消</button>
+        <button class="btn btn-primary" onclick="saveMember('${memberId||''}')">保存</button>
+      </div>
+    </div>`;
+  document.body.appendChild(mask);
+}
+
+async function saveMember(memberId) {
+  const ownerVal = currentUser.role==='admin' ? (document.getElementById('fm-owner')?.value || currentUser.username) : currentUser.username;
+  const ownerNameVal = currentUser.role==='admin' ? (allUsers.find(u=>u.username===ownerVal)?.name || ownerVal) : currentUser.name;
+  const data = {
+    name: document.getElementById('fm-name').value.trim(),
+    phone: document.getElementById('fm-phone').value.trim(),
+    gender: document.getElementById('fm-gender').value,
+    age: document.getElementById('fm-age').value,
+    type: document.getElementById('fm-type').value,
+    product: document.getElementById('fm-product').value,
+    amount: parseFloat(document.getElementById('fm-amount').value)||0,
+    points: parseInt(document.getElementById('fm-points').value)||0,
+    join_date: document.getElementById('fm-join').value,
+    source: document.getElementById('fm-source').value,
+    status: document.getElementById('fm-status').value,
+    owner: ownerVal,
+    owner_name: ownerNameVal,
+    next_followup: document.getElementById('fm-next').value,
+    note: document.getElementById('fm-note').value,
+    _role: currentUser.role,
+    _username: currentUser.username,
+    _operator: currentUser.username
+  };
+  if (!data.name) { alert('请输入会员姓名'); return; }
+  try {
+    let res;
+    if (memberId) {
+      res = await fetch(`${API}/api/members/${memberId}?username=${currentUser.username}`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(data)
+      });
+    } else {
+      data.owner = currentUser.username;
+      data.owner_name = currentUser.name;
+      res = await fetch(`${API}/api/members?username=${currentUser.username}`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(data)
+      });
+    }
+    const result = await res.json();
+    if (result.success) {
+      document.querySelector('.modal-mask')?.remove();
+      _memberSearchKeyword = '';
+      fetchAndRefreshMembers();
+    } else { alert('保存失败：' + (result.message||'未知错误')); }
+  } catch(e) { alert('保存失败，请检查网络'); }
+}
+
+async function deleteMember(memberId) {
+  if (!confirm('确认删除该会员？此操作不可恢复！')) return;
+  try {
+    const res = await fetch(`${API}/api/members/${memberId}?operator=${currentUser.username}`, { method:'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      fetchAndRefreshMembers();
+    } else alert('删除失败');
+  } catch(e) { alert('删除失败，请检查网络'); }
+}
+
+// ===== 查看会员详情 =====
+async function viewMember(memberId) {
+  try {
+    const res = await fetch(`${API}/api/members/${memberId}?username=${currentUser.username}`);
+    const data = await res.json();
+    if (!data.success) { alert('无权限查看或会员不存在'); return; }
+    const m = data.data;
+    const [consumeRes, pointsRes, commRes] = await Promise.all([
+      fetch(`${API}/api/consumption/${m.id}`).then(r=>r.json()),
+      fetch(`${API}/api/points-log/${m.id}`).then(r=>r.json()),
+      fetch(`${API}/api/communications/${m.id}`).then(r=>r.json())
+    ]);
+    const consumeList = consumeRes.data || [];
+    const pointsList = pointsRes.data || [];
+    const commList = commRes.data || [];
+    const mask = document.createElement('div');
+    mask.className = 'modal-mask';
+    mask.innerHTML = `
+      <div class="modal-box" style="width:820px;">
+        <div class="modal-header"><h3>会员详情 - ${m.name}</h3><button class="modal-close" onclick="this.closest('.modal-mask').remove()">×</button></div>
+        <div class="modal-body">
+          <div class="detail-section">
+            <h4>基本信息</h4>
+            <div class="detail-grid">
+              <div class="detail-item"><div class="dl">会员编号</div><div class="dv">${m.id}</div></div>
+              <div class="detail-item"><div class="dl">姓名</div><div class="dv">${m.name}</div></div>
+              <div class="detail-item"><div class="dl">电话</div><div class="dv">${m.phone||'—'}</div></div>
+              <div class="detail-item"><div class="dl">类型</div><div class="dv">${m.type}</div></div>
+              <div class="detail-item"><div class="dl">积分</div><div class="dv"><span class="points-tag">${m.points||0}</span></div></div>
+              <div class="detail-item"><div class="dl">状态</div><div class="dv">${m.status}</div></div>
+              <div class="detail-item"><div class="dl">购买产品</div><div class="dv">${m.product||'—'}</div></div>
+              <div class="detail-item"><div class="dl">消费金额</div><div class="dv">¥${((m.total_spent||m.amount||0)).toLocaleString()}</div></div>
+              <div class="detail-item"><div class="dl">入会日期</div><div class="dv">${m.join_date||'—'}</div></div>
+              <div class="detail-item"><div class="dl">来源</div><div class="dv">${m.source||'—'}</div></div>
+              <div class="detail-item"><div class="dl">负责人</div><div class="dv">${showOwner(m)}</div></div>
+            </div>
+          </div>
+          <div class="detail-section">
+            <h4>积分流水（${pointsList.length}条）</h4>
+            ${pointsList.length===0?'<div class="empty-tip">暂无积分记录</div>':'<table><thead><tr><th>日期</th><th>类型</th><th>变动</th><th>余额</th><th>备注</th></tr></thead><tbody>' + pointsList.map(p=>`<tr><td>${p.log_date}</td><td>${p.change_type}</td><td style="color:${p.points_change>=0?'#67c23a':'#f56c6c'};font-weight:600;">${p.points_change>=0?'+':''}${p.points_change}</td><td>${p.balance_after}</td><td>${p.note||'—'}</td></tr>`).join('') + '</tbody></table>'}
+          </div>
+          <div class="detail-section">
+            <h4>消费记录（${consumeList.length}条）</h4>
+            ${consumeList.length===0?'<div class="empty-tip">暂无消费记录</div>':'<table><thead><tr><th>日期</th><th>类型</th><th>地点</th><th>消耗积分</th><th>现金</th></tr></thead><tbody>' + consumeList.map(c=>`<tr><td>${c.consume_date}</td><td>${c.consume_type}</td><td>${c.location||'—'}</td><td><span class="points-tag">${c.points_spent||0}</span></td><td>¥${(c.cash_spent||0).toLocaleString()}</td></tr>`).join('') + '</tbody></table>'}
+          </div>
+          <div class="detail-section">
+            <h4>沟通记录（${commList.length}条）</h4>
+            ${commList.length===0?'<div class="empty-tip">暂无沟通记录</div>':'<table><thead><tr><th>日期</th><th>方式</th><th>内容</th><th>下次跟进</th></tr></thead><tbody>' + commList.map(c=>`<tr><td>${c.comm_date}</td><td>${c.comm_type}</td><td>${c.content||'—'}</td><td>${c.next_followup||'—'}</td></tr>`).join('') + '</tbody></table>'}
+          </div>
+        </div>
+        <div class="modal-footer"><button class="btn" style="background:#f0f0f0;color:#666;" onclick="this.closest('.modal-mask').remove()">关闭</button></div>
+      </div>`;
+    document.body.appendChild(mask);
+  } catch(e) { alert('加载失败'); }
+}
+
+// ===== 消费记录页 =====
+async function loadConsumptionPage() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = '<div class="loading">加载中...</div>';
+  try {
+    const [consumeRes, membersRes] = await Promise.all([
+      fetch(`${API}/api/consumption-records`).then(r=>r.json()),
+      fetch(`${API}/api/members?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=${currentUser.role}`).then(r=>r.json())
+    ]);
+    allConsume = consumeRes.data || [];
+    allMembers = membersRes.data || [];
+    mc.innerHTML = `
+      <div class="page-title">🛒 消费记录</div>
+      <div class="table-box">
+        <div class="table-header"><h3>所有消费记录（${allConsume.length}条）</h3><button class="btn btn-primary" onclick="openConsumeModal()">+ 新增消费记录</button></div>
+        <table><thead><tr><th>消费编号</th><th>会员</th><th>消费类型</th><th>地点</th><th>消耗积分</th><th>现金支付</th><th>日期</th><th>操作人</th></tr></thead><tbody>
+          ${allConsume.map(c => { const m = allMembers.find(x=>x.id===c.member_id); return `<tr><td>${c.consume_id}</td><td>${m?m.name:'未知'}</td><td>${c.consume_type}</td><td>${c.location||'—'}</td><td><span class="points-tag">${c.points_spent||0}</span></td><td>¥${(c.cash_spent||0).toLocaleString()}</td><td>${c.consume_date}</td><td>${c.operator||'—'}</td></tr>`; }).join('')}
+        </tbody></table>
+        ${allConsume.length===0?'<div class="empty-tip">暂无消费记录，点击"新增消费记录"开始录入</div>':''}
+      </div>`;
+  } catch(e) { mc.innerHTML = '<div class="loading" style="color:#f56c6c;">加载失败</div>'; }
+}
+
+async function openConsumeModal() {
+  const [membersRes, catalogRes] = await Promise.all([
+    fetch(`${API}/api/members?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=${currentUser.role}`).then(r=>r.json()),
+    fetch(`${API}/api/catalog`).then(r=>r.json())
+  ]);
+  const members = membersRes.data || [];
+  const catalog = catalogRes.data || [];
+  const mask = document.createElement('div');
+  mask.className = 'modal-mask';
+  mask.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-header"><h3>新增消费记录</h3><button class="modal-close" onclick="this.closest('.modal-mask').remove()">×</button></div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group"><label>会员 *</label><select id="cc-member"><option value="">请选择会员</option>${members.map(m=>`<option value="${m.id}">${m.name}（${m.id}）</option>`).join('')}</select></div>
+          <div class="form-group"><label>消费项目 *</label><select id="cc-item"><option value="">请选择项目</option>${catalog.map(i=>`<option value="${i.item_id}" data-points="${i.points_cost}" data-name="${i.item_name}">${i.item_name}（${i.points_cost}积分 / ¥${i.cash_price}）</option>`).join('')}</select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>消费类型</label><input id="cc-type" value="" placeholder="康养服务/住宿/商城商品" /></div>
+          <div class="form-group"><label>消费地点</label><input id="cc-location" value="南川基地" placeholder="如：南川基地" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>消耗积分</label><input id="cc-points" type="number" value="0" /></div>
+          <div class="form-group"><label>现金支付（元）</label><input id="cc-cash" type="number" value="0" /></div>
+        </div>
+        <div class="form-group"><label>备注</label><textarea id="cc-note"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" style="background:#f0f0f0;color:#666;" onclick="this.closest('.modal-mask').remove()">取消</button>
+        <button class="btn btn-primary" onclick="saveConsume()">提交</button>
+      </div>
+    </div>`;
+  document.body.appendChild(mask);
+  document.getElementById('cc-item').addEventListener('change', function() {
+    const opt = this.options[this.selectedIndex];
+    document.getElementById('cc-points').value = opt.dataset.points || 0;
+    const name = opt.dataset.name || '';
+    if (name.includes('住宿')) document.getElementById('cc-type').value = '住宿';
+    else if (name.includes('康养')||name.includes('按摩')) document.getElementById('cc-type').value = '康养服务';
+    else if (name.includes('礼盒')||name.includes('农产品')) document.getElementById('cc-type').value = '商城商品';
+    else document.getElementById('cc-type').value = name;
+  });
+}
+
+async function saveConsume() {
+  const member_id = document.getElementById('cc-member').value;
+  const item_id = document.getElementById('cc-item').value;
+  if (!member_id || !item_id) { alert('请选择会员和消费项目'); return; }
+  const data = {
+    member_id, item_id,
+    consume_type: document.getElementById('cc-type').value,
+    location: document.getElementById('cc-location').value,
+    points_spent: parseInt(document.getElementById('cc-points').value)||0,
+    cash_spent: parseFloat(document.getElementById('cc-cash').value)||0,
+    operator: currentUser.name||'系统',
+    note: document.getElementById('cc-note').value
+  };
+  try {
+    const res = await fetch(`${API}/api/consume`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (result.success) { document.querySelector('.modal-mask')?.remove(); loadConsumptionPage(); }
+    else alert('提交失败');
+  } catch(e) { alert('提交失败，请检查网络'); }
+}
+
+// ===== 积分流水页 =====
+async function loadPointsPage() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = '<div class="loading">加载中...</div>';
+  try {
+    const [logsRes, membersRes] = await Promise.all([
+      fetch(`${API}/api/points-logs`).then(r=>r.json()),
+      fetch(`${API}/api/members?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=${currentUser.role}`).then(r=>r.json())
+    ]);
+    allPointsLog = logsRes.data || [];
+    allMembers = membersRes.data || [];
+    mc.innerHTML = `
+      <div class="page-title">💰 积分流水</div>
+      <div class="table-box">
+        <div class="table-header"><h3>所有积分变动记录（${allPointsLog.length}条）</h3></div>
+        <table><thead><tr><th>流水号</th><th>会员</th><th>变动类型</th><th>积分变动</th><th>变动后余额</th><th>日期</th><th>操作人</th><th>备注</th></tr></thead><tbody>
+          ${allPointsLog.map(p => { const m = allMembers.find(x=>x.id===p.member_id); return `<tr><td>${p.log_id}</td><td>${m?m.name:'未知'}</td><td>${p.change_type}</td><td style="color:${p.points_change>=0?'#67c23a':'#f56c6c'};font-weight:600;">${p.points_change>=0?'+':''}${p.points_change}</td><td>${p.balance_after}</td><td>${p.log_date}</td><td>${p.operator||'—'}</td><td>${p.note||'—'}</td></tr>`; }).join('')}
+        </tbody></table>
+        ${allPointsLog.length===0?'<div class="empty-tip">暂无积分流水记录</div>':''}
+      </div>`;
+  } catch(e) { mc.innerHTML = '<div class="loading" style="color:#f56c6c;">加载失败</div>'; }
+}
+
+// ===== 服务目录页 =====
+async function loadCatalogPage() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = '<div class="loading">加载中...</div>';
+  try {
+    const res = await fetch(`${API}/api/catalog`);
+    const data = await res.json();
+    allCatalog = data.data || [];
+    mc.innerHTML = `
+      <div class="page-title">📋 服务/商品目录</div>
+      <div class="table-box">
+        <div class="table-header"><h3>所有服务/商品（${allCatalog.length}项）</h3></div>
+        <table><thead><tr><th>编号</th><th>名称</th><th>分类</th><th>所需积分</th><th>现金价格</th><th>状态</th><th>描述</th></tr></thead><tbody>
+          ${allCatalog.map(i => `<tr><td>${i.item_id}</td><td>${i.item_name}</td><td>${i.category}</td><td><span class="points-tag">${i.points_cost}</span></td><td>¥${i.cash_price}</td><td>${i.is_active?'<span class="tag tag-status-converted">上架</span>':'<span class="tag tag-status-lost">下架</span>'}</td><td>${i.description||'—'}</td></tr>`).join('')}
+        </tbody></table>
+      </div>`;
+  } catch(e) { mc.innerHTML = '<div class="loading" style="color:#f56c6c;">加载失败</div>'; }
+}
+
+// ===== 沟通记录页 =====
+async function loadCommPage() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = '<div class="loading">加载中...</div>';
+  try {
+    const membersRes = await fetch(`${API}/api/members?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=${currentUser.role}`).then(r=>r.json());
+    allMembers = membersRes.data || [];
+    let allComm = [];
+    for (const m of allMembers) {
+      const res = await fetch(`${API}/api/communications/${m.id}`);
+      const data = await res.json();
+      (data.data||[]).forEach(c => { c.member_name = m.name; allComm.push(c); });
+    }
+    allComm.sort((a,b) => (b.comm_date||'').localeCompare(a.comm_date||''));
+    mc.innerHTML = `
+      <div class="page-title">💬 沟通记录</div>
+      <div class="table-box">
+        <div class="table-header"><h3>所有沟通记录（${allComm.length}条）</h3><button class="btn btn-primary" onclick="openCommModal()">+ 新增沟通记录</button></div>
+        <table><thead><tr><th>会员</th><th>沟通方式</th><th>沟通内容</th><th>沟通日期</th><th>下次跟进</th><th>操作人</th></tr></thead><tbody>
+          ${allComm.map(c => `<tr><td>${c.member_name}</td><td>${c.comm_type}</td><td>${c.content||'—'}</td><td>${c.comm_date}</td><td>${c.next_followup||'—'}</td><td>${c.operator||'—'}</td></tr>`).join('')}
+        </tbody></table>
+        ${allComm.length===0?'<div class="empty-tip">暂无沟通记录</div>':''}
+      </div>`;
+  } catch(e) { mc.innerHTML = '<div class="loading" style="color:#f56c6c;">加载失败</div>'; }
+}
+
+async function openCommModal() {
+  const membersRes = await fetch(`${API}/api/members?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=${currentUser.role}`).then(r=>r.json());
+  const members = membersRes.data || [];
+  const mask = document.createElement('div');
+  mask.className = 'modal-mask';
+  mask.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-header"><h3>新增沟通记录</h3><button class="modal-close" onclick="this.closest('.modal-mask').remove()">×</button></div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:16px;"><label>会员 *</label><select id="cm-member"><option value="">请选择会员</option>${members.map(m=>`<option value="${m.id}">${m.name}（${m.id}）</option>`).join('')}</select></div>
+        <div class="form-row">
+          <div class="form-group"><label>沟通方式</label><select id="cm-type"><option>电话</option><option>微信</option><option>面谈</option><option>短信</option></select></div>
+          <div class="form-group"><label>沟通日期</label><input id="cm-date" type="date" value="${new Date().toISOString().split('T')[0]}" /></div>
+        </div>
+        <div class="form-group" style="margin-bottom:16px;"><label>沟通内容</label><textarea id="cm-content" placeholder="记录本次沟通内容..."></textarea></div>
+        <div class="form-group"><label>下次跟进日期</label><input id="cm-next" type="date" /></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" style="background:#f0f0f0;color:#666;" onclick="this.closest('.modal-mask').remove()">取消</button>
+        <button class="btn btn-primary" onclick="saveComm()">提交</button>
+      </div>
+    </div>`;
+  document.body.appendChild(mask);
+}
+
+async function saveComm() {
+  const member_id = document.getElementById('cm-member').value;
+  if (!member_id) { alert('请选择会员'); return; }
+  const data = {
+    member_id,
+    comm_type: document.getElementById('cm-type').value,
+    comm_date: document.getElementById('cm-date').value,
+    content: document.getElementById('cm-content').value,
+    next_followup: document.getElementById('cm-next').value,
+    operator: currentUser.name||'系统'
+  };
+  try {
+    const res = await fetch(`${API}/api/communications`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (result.success) { document.querySelector('.modal-mask')?.remove(); loadCommPage(); }
+  } catch(e) { alert('提交失败'); }
+}
+
+// ===== 操作日志页（管理员）=====
+async function loadOpLogsPage() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = '<div class="loading">加载中...</div>';
+  try {
+    const [logsRes, membersRes] = await Promise.all([
+      fetch(`${API}/api/operation-logs`).then(r=>r.json()),
+      fetch(`${API}/api/members?username=${currentUser.username}&name=${encodeURIComponent(currentUser.name)}&role=${currentUser.role}`).then(r=>r.json())
+    ]);
+    const logs = logsRes.data || [];
+    allMembers = membersRes.data || [];
+    mc.innerHTML = `
+      <div class="page-title">📝 操作日志</div>
+      <div class="table-box">
+        <div class="table-header"><h3>最近操作记录（最新200条）</h3></div>
+        <table class="log-table"><thead><tr><th>时间</th><th>用户</th><th>操作</th><th>对象</th><th>详情</th></tr></thead><tbody>
+          ${logs.map(l => {
+            let targetName = l.target||'';
+            if (l.target && l.target.startsWith('M')) {
+              const m = allMembers.find(x=>x.id===l.target);
+              if (m) targetName = m.name + '（'+l.target+'）';
+            }
+            const actionMap = {'login':'登录','view_member':'查看会员','edit_member':'修改会员','add_member':'新增会员','delete_member':'删除会员','consume':'消费','comm':'沟通记录','change_password':'修改密码','add_user':'新增用户','edit_user':'修改用户'};
+            return `<tr>
+              <td class="time">${new Date(l.timestamp).toLocaleString('zh-CN')}</td>
+              <td><strong>${l.username}</strong></td>
+              <td class="action">${actionMap[l.action]||l.action}</td>
+              <td>${targetName}</td>
+              <td>${l.detail||'—'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody></table>
+        ${logs.length===0?'<div class="empty-tip">暂无操作日志</div>':''}
+      </div>`;
+  } catch(e) { mc.innerHTML = '<div class="loading" style="color:#f56c6c;">加载失败</div>'; }
+}
+
+// ===== 账号管理页（管理员）=====
+async function loadAccountsPage() {
+  const mc = document.getElementById('mainContent');
+  mc.innerHTML = '<div class="loading">加载中...</div>';
+  try {
+    const res = await fetch(`${API}/api/users`);
+    const data = await res.json();
+    allUsers = data.data || [];
+    mc.innerHTML = `
+      <div class="page-title">👤 账号管理</div>
+      <div class="table-box">
+        <div class="table-header"><h3>所有账号（${allUsers.length}个）</h3><button class="btn btn-primary" onclick="openAccountModal()">+ 新增账号</button></div>
+        <table><thead><tr><th>用户名</th><th>姓名</th><th>角色</th><th>状态</th><th>操作</th></tr></thead><tbody>
+          ${allUsers.map(u => `<tr>
+            <td><strong>${u.username}</strong></td>
+            <td>${u.name}</td>
+            <td>${u.role==='admin'?'<span class="tag tag-core">管理员</span>':'<span class="tag tag-trial">销售</span>'}</td>
+            <td>${u.is_active?'<span class="tag tag-status-converted">启用</span>':'<span class="tag tag-status-lost">禁用</span>'}</td>
+            <td>
+              <button class="btn btn-sm" style="background:#f0f5ff;color:#667eea;border:none;" onclick="openAccountModal('${u.username}')">编辑</button>
+              ${u.username !== currentUser.username ? `<button class="btn btn-sm ${u.is_active?'btn-warning':'btn-success'}" onclick="toggleUser('${u.username}',${u.is_active})">${u.is_active?'禁用':'启用'}</button>` : ''}
+              <button class="btn btn-sm" style="background:#f0f5ff;color:#e6a23c;border:none;" onclick="resetPwd('${u.username}')">重置密码</button>
+              ${allUsers.length>1 && u.username !== currentUser.username ? `<button class="btn btn-sm btn-danger" onclick="deleteUser('${u.username}')">删除</button>` : ''}
+            </td>
+          </tr>`).join('')}
+        </tbody></table>
+      </div>
+      <div style="margin-top:16px;padding:16px;background:#fff3cd;border-radius:8px;font-size:13px;color:#856404;">
+        💡 <strong>说明：</strong>禁用后该账号无法登录；重置密码将密码恢复为默认 <code>xg2026</code>；删除账号请谨慎操作。
+      </div>`;
+  } catch(e) { mc.innerHTML = '<div class="loading" style="color:#f56c6c;">加载失败</div>'; }
+}
+
+async function openAccountModal(username) {
+  let u = { username:'', name:'', role:'sales', password:'' };
+  let isEdit = false;
+  if (username) {
+    const res = await fetch(`${API}/api/users/${username}`);
+    const data = await res.json();
+    if (data.success) { u = data.data; isEdit = true; }
+  }
+  const mask = document.createElement('div');
+  mask.className = 'modal-mask';
+  mask.innerHTML = `
+    <div class="modal-box" style="width:480px;">
+      <div class="modal-header"><h3>${isEdit?'编辑账号':'新增账号'}</h3><button class="modal-close" onclick="this.closest('.modal-mask').remove()">×</button></div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:16px;"><label>用户名 *（登录用）${isEdit?' <span style="color:#e6a23c;font-weight:normal;">🔒 不可修改</span>':''}</label><input id="ac-username" class="${isEdit?'input-locked':''}" value="${u.username||''}" placeholder="英文用户名" ${isEdit?'readonly disabled':''} style="${isEdit?'background:#f5f5f5;color:#999;cursor:not-allowed;':''}" /></div>
+        <div class="form-group" style="margin-bottom:16px;"><label>姓名 *（显示用）</label><input id="ac-name" value="${u.name||''}" placeholder="如：小刘" /></div>
+        <div class="form-group" style="margin-bottom:16px;"><label>角色</label><select id="ac-role"><option ${u.role==='admin'?'selected':''}>admin</option><option ${u.role==='sales'?'selected':''}>sales</option></select></div>
+        ${!isEdit?'<div class="form-group" style="margin-bottom:16px;"><label>初始密码（默认 xg2026）</label><input id="ac-pwd" type="password" placeholder="留空则为默认密码 xg2026" /></div>':''}
+        ${isEdit?'<div style="font-size:13px;color:#999;margin-bottom:16px;">修改密码请使用"重置密码"功能</div>':''}
+      </div>
+      <div class="modal-footer">
+        <button class="btn" style="background:#f0f0f0;color:#666;" onclick="this.closest('.modal-mask').remove()">取消</button>
+        <button class="btn btn-primary" onclick="saveAccount('${username||''}')">保存</button>
+      </div>
+    </div>`;
+  document.body.appendChild(mask);
+}
+
+async function saveAccount(username) {
+  const newUsername = document.getElementById('ac-username').value.trim();
+  const name = document.getElementById('ac-name').value.trim();
+  const role = document.getElementById('ac-role').value;
+  const pwd = document.getElementById('ac-pwd') ? document.getElementById('ac-pwd').value : '';
+  if (!newUsername || !name) { alert('请填写用户名和姓名'); return; }
+  try {
+    let res;
+    if (username) {
+      res = await fetch(`${API}/api/users/${username}?operator=${currentUser.username}`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({name, role})
+      });
+    } else {
+      res = await fetch(`${API}/api/users?operator=${currentUser.username}`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({username:newUsername, name, role, password: pwd||'xg2026'})
+      });
+    }
+    const data = await res.json();
+    if (data.success) { document.querySelector('.modal-mask')?.remove(); loadAccountsPage(); }
+    else alert('保存失败：' + (data.message||'未知错误'));
+  } catch(e) { alert('保存失败'); }
+}
+
+async function toggleUser(username, isActive) {
+  try {
+    const res = await fetch(`${API}/api/users/${username}?operator=${currentUser.username}`, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({is_active: !isActive})
+    });
+    const data = await res.json();
+    if (data.success) loadAccountsPage();
+    else alert('操作失败');
+  } catch(e) { alert('操作失败'); }
+}
+
+async function resetPwd(username) {
+  if (!confirm(`确认将 ${username} 的密码重置为默认密码 xg2026？`)) return;
+  try {
+    const res = await fetch(`${API}/api/users/${username}?operator=${currentUser.username}`, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({password:'xg2026'})
+    });
+    const data = await res.json();
+    if (data.success) { alert('密码已重置为 xg2026'); loadAccountsPage(); }
+    else alert('操作失败');
+  } catch(e) { alert('操作失败'); }
+}
+
+async function deleteUser(username) {
+  if (!confirm(`确认删除账号 ${username}？此操作不可恢复！`)) return;
+  try {
+    const res = await fetch(`${API}/api/users/${username}?operator=${currentUser.username}`, { method:'DELETE' });
+    if (res.ok) { alert('删除成功'); loadAccountsPage(); }
+    else alert('删除失败');
+  } catch(e) { alert('删除失败'); }
+}
+</script>
+</body>
+</html>
