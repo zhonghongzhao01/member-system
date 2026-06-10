@@ -1,0 +1,230 @@
+{
+  "total": 33,
+  "passed": 24,
+  "failed": 9,
+  "rate": 72.72727272727273,
+  "results": [
+    {
+      "label": "admin登录",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "xiaoliu登录",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "xiaochen登录",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "percy登录",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "密码错误",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "用户不存在",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "空密码(应提示)",
+      "status": "FAIL",
+      "reasons": [
+        "消息不含'不能为空' 实际='密码错误'"
+      ],
+      "resp": "{'success': False, 'message': '密码错误'}"
+    },
+    {
+      "label": "admin查全部",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "xiaoliu查自己",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "统计数据",
+      "status": "FAIL",
+      "reasons": [
+        "缺字段'totalMembers'",
+        "缺字段'totalRevenue'"
+      ],
+      "resp": "{'success': True, 'data': {'total_members': 16, 'core_members': 6, 'trial_members': 3, 'total_points': 109600, 'total_spent': 56860}}"
+    },
+    {
+      "label": "目录列表",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "新增会员",
+      "status": "FAIL",
+      "reasons": [
+        "缺字段'id'"
+      ],
+      "resp": "{'success': True, 'data': {'id': 'M017', 'name': '自动化测试A', 'phone': '13811110000', 'gender': '', 'age': '', 'type': '散客', 'product': '', 'amount': 0, 'points': 800, 'total_spent': 0, 'join_date': '2026-06-10', 'source': '', 'status': '新登记', 'owner': 'xiaoliu', 'owner_name': '小刘', 'next_followup': ''"
+    },
+    {
+      "label": "编辑会员",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "删除测试会员",
+      "status": "FAIL",
+      "reasons": [
+        "状态码=0",
+        "缺字段'success'"
+      ],
+      "resp": "{'error': \"'ascii' codec can't encode characters in position 20-24: ordinal not in range(128)\"}"
+    },
+    {
+      "label": "新增会员B",
+      "status": "FAIL",
+      "reasons": [
+        "缺字段'id'"
+      ],
+      "resp": "{'success': True, 'data': {'id': 'M018', 'name': '测试B', 'phone': '13822220000', 'gender': '', 'age': '', 'type': '散客', 'product': '', 'amount': 0, 'points': 200, 'total_spent': 0, 'join_date': '2026-06-10', 'source': '', 'status': '新登记', 'owner': 'xiaochen', 'owner_name': '小陈', 'next_followup': '', "
+    },
+    {
+      "label": "删除测试B",
+      "status": "FAIL",
+      "reasons": [
+        "状态码=0",
+        "缺字段'success'"
+      ],
+      "resp": "{'error': \"'ascii' codec can't encode characters in position 20-21: ordinal not in range(128)\"}"
+    },
+    {
+      "label": "消费列表",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "新增消费",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "积分流水列表",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "单个会员积分",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "沟通记录列表",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "新增沟通",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "操作日志",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "用户列表",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "查询admin",
+      "status": "FAIL",
+      "reasons": [
+        "缺字段'id'",
+        "缺字段'username'",
+        "缺字段'name'",
+        "缺字段'role'"
+      ],
+      "resp": "{'success': True, 'data': {'id': 1, 'username': 'admin', 'name': '管理员', 'role': 'admin', 'is_active': 1}}"
+    },
+    {
+      "label": "修改密码",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "改用户名被拒",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "删用户",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "销售改别人会员",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "销售数量<全部",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "重复删除不存在会员",
+      "status": "PASS",
+      "reasons": [],
+      "resp": ""
+    },
+    {
+      "label": "手机号重复新增",
+      "status": "FAIL",
+      "reasons": [
+        "缺字段'id'"
+      ],
+      "resp": "{'success': True, 'data': {'id': 'M019', 'name': '重复测试', 'phone': '13800000001', 'gender': '', 'age': '', 'type': '散客', 'product': '', 'amount': 0, 'points': 100, 'total_spent': 0, 'join_date': '2026-06-10', 'source': '', 'status': '新登记', 'owner': 'admin', 'owner_name': '管理员', 'next_followup': '', '"
+    },
+    {
+      "label": "超长名称",
+      "status": "FAIL",
+      "reasons": [
+        "缺字段'id'"
+      ],
+      "resp": "{'success': True, 'data': {'id': 'M020', 'name': 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'phone': '13899999999', 'gender': '', 'age': '', 'type': '散客', 'product': '', 'amount': 0, 'points': 100, 'total_spent': 0, 'join_date': '2026-06-10', 'source': '', 'status': '新登记', 'owner': 'admin"
+    }
+  ]
+}

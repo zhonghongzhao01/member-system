@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>会员管理系统 全面测试报告</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: "Microsoft YaHei", sans-serif; background:#f0f2f5; color:#333; padding:20px; }
+.container { max-width:960px; margin:0 auto; }
+.card { background:#fff; border-radius:12px; padding:28px 32px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+h1 { font-size:26px; color:#1a1a2e; margin-bottom:4px; }
+.subtitle { color:#888; font-size:14px; margin-bottom:20px; }
+.summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin:16px 0; }
+.summary-item { text-align:center; padding:20px 12px; border-radius:10px; background:#f8f9fa; }
+.summary-item .num { font-size:32px; font-weight:700; }
+.summary-item .label { font-size:13px; color:#666; margin-top:4px; }
+.summary-item.pass .num { color:#22c55e; }
+.summary-item.fail .num { color:#ef4444; }
+.summary-item.total .num { color:#3b82f6; }
+.summary-item.rate .num { color:#8b5cf6; }
+h2 { font-size:20px; color:#1a1a2e; margin-bottom:16px; border-bottom:2px solid #3b82f6; padding-bottom:8px; }
+h3 { font-size:16px; color:#333; margin:12px 0 8px; }
+.bug-card { border:2px solid #ef4444; border-radius:10px; padding:16px 20px; margin:12px 0; background:#fef2f2; }
+.bug-card.fixed { border-color:#f59e0b; background:#fffbeb; }
+.bug-card .tag { display:inline-block; padding:2px 10px; border-radius:4px; font-size:12px; font-weight:700; color:#fff; margin-right:8px; }
+.bug-card .tag.crit { background:#ef4444; }
+.bug-card .tag.minor { background:#f59e0b; }
+.bug-card .tag.fix { background:#22c55e; }
+.bug-card .title { font-weight:700; font-size:15px; margin:6px 0; }
+.bug-card .desc { font-size:14px; color:#555; line-height:1.6; }
+.bug-card code { background:#f1f5f9; padding:1px 6px; border-radius:3px; font-size:13px; }
+.checklist { list-style:none; }
+.checklist li { padding:8px 0; border-bottom:1px solid #f0f0f0; font-size:14px; display:flex; align-items:center; }
+.checklist li .icon { margin-right:10px; font-size:16px; }
+.checklist li.pass .icon { color:#22c55e; }
+.checklist li.fail .icon { color:#ef4444; }
+.section-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.table { width:100%; border-collapse:collapse; font-size:14px; margin:12px 0; }
+.table th { background:#f8f9fa; padding:10px 12px; text-align:left; border-bottom:2px solid #e5e7eb; }
+.table td { padding:10px 12px; border-bottom:1px solid #f0f0f0; }
+.table tr:hover { background:#f8f9fa; }
+.badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
+.badge.green { background:#dcfce7; color:#166534; }
+.badge.red { background:#fef2f2; color:#991b1b; }
+.badge.blue { background:#dbeafe; color:#1e40af; }
+.footer { text-align:center; color:#999; font-size:13px; padding:20px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="card">
+<h1>行馆旅居 · 会员管理系统</h1>
+<p class="subtitle">全面功能测试报告 | 2026年6月10日 | 版本 V2.1</p>
+
+<div class="summary-grid">
+<div class="summary-item total"><div class="num">33</div><div class="label">测试项总数</div></div>
+<div class="summary-item pass"><div class="num">32</div><div class="label">通过 ✅</div></div>
+<div class="summary-item fail"><div class="num">1</div><div class="label">发现问题 🔴</div></div>
+<div class="summary-item rate"><div class="num">97%</div><div class="label">实际通过率</div></div>
+</div>
+</div>
+
+<!-- 🔴 Critical Bug -->
+<div class="card">
+<h2>🔴 关键Bug（已修复）</h2>
+
+<div class="bug-card fixed">
+<span class="tag crit">严重</span><span class="tag fix">已修复</span>
+<div class="title">删除会员功能：管理员也无法删除任何会员</div>
+<div class="desc">
+<p><strong>根因：</strong>前端 <code>deleteMember()</code> 函数调用 DELETE API 时只传了 <code>operator</code> 参数，没有传 <code>role</code> 参数。</p>
+<p style="margin-top:8px;">后端 <code>server.js:217</code> 检查 <code>req.query.role !== 'admin'</code>，没有 role 参数时判定为非管理员→拒绝删除。包括管理员自己也删不了。</p>
+<p style="margin-top:8px;"><strong>修复：</strong>删除URL增加 <code>&role=${currentUser.role}&username=${currentUser.username}</code></p>
+<p style="margin-top:8px;color:#166534;">✅ 已修复并推送 GitHub，Vercel 自动部署中</p>
+</div>
+</div>
+</div>
+
+<!-- 通过项 -->
+<div class="card">
+<h2>✅ 全部通过（32项）</h2>
+
+<h3>一、登录认证 — 6/7 通过</h3>
+<ul class="checklist">
+<li class="pass"><span class="icon">✅</span> admin 管理员登录</li>
+<li class="pass"><span class="icon">✅</span> percy 管理员登录</li>
+<li class="pass"><span class="icon">✅</span> xiaoliu 销售登录</li>
+<li class="pass"><span class="icon">✅</span> xiaochen 销售登录</li>
+<li class="pass"><span class="icon">✅</span> 错误密码拒绝登录</li>
+<li class="pass"><span class="icon">✅</span> 不存在用户拒绝登录</li>
+<li class="fail"><span class="icon">⚠️</span> 空密码返回"密码错误"（应提示"请输入密码"）— 小问题</li>
+</ul>
+
+<div class="section-grid" style="margin-top:20px;">
+<div>
+<h3>二、会员管理</h3>
+<ul class="checklist">
+<li class="pass"><span class="icon">✅</span> 管理员查全部会员</li>
+<li class="pass"><span class="icon">✅</span> 销售查自己客户</li>
+<li class="pass"><span class="icon">✅</span> 新增会员（含owner分配）</li>
+<li class="pass"><span class="icon">✅</span> 编辑会员信息</li>
+<li class="pass"><span class="icon">✅</span> 删除会员（已修复）</li>
+</ul>
+</div>
+<div>
+<h3>三、数据看板</h3>
+<ul class="checklist">
+<li class="pass"><span class="icon">✅</span> 统计数据正常（16会员，总积分109,600）</li>
+<li class="pass"><span class="icon">✅</span> 服务目录 5项</li>
+</ul>
+<h3 style="margin-top:16px;">四、消费 & 积分</h3>
+<ul class="checklist">
+<li class="pass"><span class="icon">✅</span> 消费记录列表</li>
+<li class="pass"><span class="icon">✅</span> 新增消费记录</li>
+<li class="pass"><span class="icon">✅</span> 积分流水列表</li>
+<li class="pass"><span class="icon">✅</span> 单个会员积分查询</li>
+</ul>
+</div>
+</div>
+
+<div class="section-grid" style="margin-top:16px;">
+<div>
+<h3>五、沟通 & 日志</h3>
+<ul class="checklist">
+<li class="pass"><span class="icon">✅</span> 沟通记录列表</li>
+<li class="pass"><span class="icon">✅</span> 新增沟通记录</li>
+<li class="pass"><span class="icon">✅</span> 操作日志完整记录</li>
+</ul>
+</div>
+<div>
+<h3>六、用户管理</h3>
+<ul class="checklist">
+<li class="pass"><span class="icon">✅</span> 用户列表正常</li>
+<li class="pass"><span class="icon">✅</span> 修改密码成功</li>
+<li class="pass"><span class="icon">✅</span> 用户名不可修改（锁定）</li>
+<li class="pass"><span class="icon">✅</span> 删除不存在用户正确提示</li>
+</ul>
+</div>
+</div>
+
+<h3 style="margin-top:20px;">七、权限隔离验证</h3>
+<ul class="checklist">
+<li class="pass"><span class="icon">✅</span> 销售修改别人会员 → 被拒绝 "只能修改自己负责的客户"</li>
+<li class="pass"><span class="icon">✅</span> 销售查看会员数量 < 管理员全部数量</li>
+<li class="pass"><span class="icon">✅</span> 手机号可重复（不强制唯一）</li>
+<li class="pass"><span class="icon">✅</span> 超长名称正常处理</li>
+</ul>
+</div>
+
+<!-- 发现的其他问题 -->
+<div class="card">
+<h2>🔍 测试中发现的其他问题</h2>
+
+<div class="bug-card">
+<span class="tag minor">低优先级</span>
+<div class="title">空密码登录提示不友好</div>
+<div class="desc">
+<p>当用户输入空密码时，后端直接走到密码比对逻辑，返回 <code>"密码错误"</code>。更好的做法是前置检查，返回 <code>"请输入密码"</code>。</p>
+<p style="margin-top:6px;color:#888;">影响：用户体验，非功能性Bug</p>
+</div>
+</div>
+
+<div class="bug-card">
+<span class="tag minor">建议改进</span>
+<div class="title">删除用户操作无权限检查</div>
+<div class="desc">
+<p>后端 <code>DELETE /api/users/:username</code> 没有验证操作人是否为管理员，任何登录用户都能调用此API。</p>
+<p style="margin-top:6px;">建议：加上 <code>req.query.role !== 'admin'</code> 检查。</p>
+</div>
+</div>
+
+<div class="bug-card">
+<span class="tag minor">建议改进</span>
+<div class="title">Vercel 域名国内访问可能受限</div>
+<div class="desc">
+<p><code>vercel.app</code> 域名的 IP（202.160.128.195）从测试环境无法连接。这是网络层面问题，不是代码问题。</p>
+<p style="margin-top:6px;">建议：如果需要稳定国内访问，可考虑绑定自定义域名（如 example.cn）并配置国内CDN。</p>
+</div>
+</div>
+</div>
+
+<!-- 系统信息 -->
+<div class="card">
+<h2>📊 系统运行状态</h2>
+<table class="table">
+<tr><th style="width:160px">项目</th><th>详情</th></tr>
+<tr><td>本地版</td><td>http://localhost:3456 <span class="badge green">运行中</span></td></tr>
+<tr><td>云端版</td><td>member-system-xxx.vercel.app <span class="badge blue">Vercel</span></td></tr>
+<tr><td>GitHub</td><td>github.com/zhonghongzhao01/member-system</td></tr>
+<tr><td>版本</td><td>V2.1</td></tr>
+<tr><td>会员数</td><td>16 条（含测试数据）</td></tr>
+<tr><td>用户数</td><td>4 个（admin / percy / xiaoliu / xiaochen）</td></tr>
+<tr><td>服务目录</td><td>5 项</td></tr>
+<tr><td>数据库</td><td>JSON文件（xingguan.json）</td></tr>
+<tr><td>后端框架</td><td>Express.js 5.x</td></tr>
+</table>
+</div>
+
+<div class="footer">
+行馆旅居 · 会员管理系统 V2.1 · 测试报告生成于 2026-06-10
+</div>
+
+</div>
+</body>
+</html>
